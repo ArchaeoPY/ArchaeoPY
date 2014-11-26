@@ -29,9 +29,11 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
+            self.Image2Float()
             
         def Image2Float(self):
-            image = io.imread(self.fname)
+            self.f = open(self.fname, 'rb')
+            image = io.imread(self.f)
             self.array = img_as_float(image)
             
         def Plot_Function(self):
@@ -80,7 +82,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #Button_layout is a QT desginer Grid Layout.
             self.toolbar_grid.addWidget(self.navi_toolbar)
             self.Button_Definitions()
-            self.plot_options()
+            #self.plot_options()
             
 if __name__=='__main__':
     #Creates Main UI window
