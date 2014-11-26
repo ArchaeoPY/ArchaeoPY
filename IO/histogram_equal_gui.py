@@ -1,17 +1,18 @@
 import numpy as np
 import sys
-
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
+from skimage import img_as_float, io
+
 
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from adaptive_equal import adaptive_equalisation
+from adaptive_equal import intensity_rescale
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
@@ -29,8 +30,12 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
             
+        def Image2Float(self):
+            image = io.imread(self.fname)
+            self.array = img_as_float(image)
+            
         def Plot_Function(self):
-            self.output = adaptive_equalisation(self.fname)            
+            self.output = intensity_rescale(self.array)            
             self.mpl.canvas.ax.clear()
             print np.shape(self.output)
             self.mpl.canvas.ax.imshow(self.output)                        
