@@ -12,8 +12,7 @@ from skimage import img_as_float, io
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from adaptive_equal import intensity_rescale
-
+from adaptive_equal import adapteq
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
@@ -37,7 +36,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.array = img_as_float(image)
             
         def Plot_Function(self):
-            self.output = intensity_rescale(self.array)            
+            self.output = adapteq(self.array)            
             self.mpl.canvas.ax.clear()
             print np.shape(self.output)
             self.mpl.canvas.ax.imshow(self.output)                        
