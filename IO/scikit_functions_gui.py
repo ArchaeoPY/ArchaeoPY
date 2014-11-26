@@ -12,7 +12,7 @@ from skimage import img_as_float, io
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from adaptive_equal import adapteq
+from scikit_functions import adapteq
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
@@ -32,13 +32,17 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def Image2Float(self):
             self.f = open(self.fname, 'rb')
-            image = io.imread(self.f)
-            self.array = img_as_float(image)
+            self.image = io.imread(self.f)
+            self.array = img_as_float(self.image)
             
+        def Plot_Original_Image(self):
+            self.mpl.canvas.ax.clear()
+            self.mpl.canvas.ax.imshow(self.image)                        
+            self.mpl.canvas.draw()
+        
         def Plot_Function(self):
             self.output = adapteq(self.array)            
             self.mpl.canvas.ax.clear()
-            print np.shape(self.output)
             self.mpl.canvas.ax.imshow(self.output)                        
             self.mpl.canvas.draw()
                         
@@ -47,6 +51,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.Open_button = QtGui.QPushButton('Open', self)
             self.fname = self.Open_button.clicked.connect(self.Open_File)
+            self.fname = self.Open_button.clicked.connect(self.Plot_Original_Image)
             self.Button_Layout.addWidget(self.Open_button)
             
             self.pushButton_plot.clicked.connect(self.Plot_Function)
