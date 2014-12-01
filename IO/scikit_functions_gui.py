@@ -12,7 +12,7 @@ from skimage import img_as_float, io
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from scikit_functions import adapteq
+from scikit_functions import cannyfilter #Update as necessary
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
@@ -41,9 +41,9 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.draw()
         
         def Plot_Function(self):
-            self.output = adapteq(self.array)            
+            self.output = cannyfilter(self.array) #Updated to imported module as necessary           
             self.mpl.canvas.ax.clear()
-            self.mpl.canvas.ax.imshow(self.output)                        
+            self.mpl.canvas.ax.imshow(self.output, cmap=plt.cm.gray)                        
             self.mpl.canvas.draw()
                         
         def Button_Definitions(self):
