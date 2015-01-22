@@ -7,7 +7,7 @@ Opens Geoplot Comp & allows to save as DXF
 import numpy as np
 from dxfwrite import DXFEngine as dxf
 
-def using_clump(x,y):
+def using_clump(x,y, z=False):
     '''
     x; 1-D array of x values
     y; 1-D array of y values
@@ -35,8 +35,32 @@ def using_clump(x,y):
     from http://stackoverflow.com/questions/14605734/numpy-split-1d-array-of-chunks-separated-by-nans-into-a-list-of-the-chunks
     '''
     #
-    return [np.vstack((x[s],y[s])).T for s in np.ma.clump_unmasked(np.ma.masked_invalid(y))]
+    if z.any:
+        return [np.vstack((x[s],y[s], z[s])).T for s in np.ma.clump_unmasked(np.ma.masked_invalid(y))]
+    else:
+        return [np.vstack((x[s],y[s])).T for s in np.ma.clump_unmasked(np.ma.masked_invalid(y))]
+
+def xyz2dxf(array,fname,layer):
+    x = array[:,0]
+    y = array[:,1]
+    z = array[:,2]    
     
+    #Initiates the dxf using DXFEngine
+    drawing = dxf.drawing(fname)
+    
+    #Creates a layer for the polylines to reside
+    drawing.add_layer(str(layer))
+    
+    #splits traverses on Nan. Polylines cannot bridge Nan
+    lines = using_clump(x, y, z=z)
+    #For each traverse section (from nan splitting) creates a polyline & adds to drawing
+    for line in lines:
+        polyline = dxf.polyline(layer=str(layer))
+        polyline.add_vertices(line)
+        drawing.add(polyline)
+    
+    #Saves Drawing
+    drawing.save()
     
 def comp2dxf(comp, fname, sample_interval, traverse_interval, scale, clip, layer):
     
