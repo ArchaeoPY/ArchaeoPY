@@ -1,5 +1,6 @@
 from skimage import exposure, filter, feature
 from skimage.color import rgb2gray
+import numpy as np
 
 '''Information and functions taken from scikit-image. Please consult 
 scikit-image.org/docs for further information.'''
@@ -18,6 +19,13 @@ def adaptthreshold(array):
 
 '''Edge filter using the Canny algorithm
 (input array, sigma = SD of gaussian filter)'''
-def cannyfilter(array):
+def canny(array):
     grayarray = rgb2gray(array)
-    return feature.canny(grayarray, sigma=1)
+    return filter.canny(grayarray, sigma=3)
+
+'''Rescale Intensity: (contrast stretching to stretch or shrink image intensity)
+(input array, in_range)'''
+def contrast_stretching(array):
+    p2 = np.percentile(array, 2) 
+    p98 = np.percentile(array, 98)
+    return exposure.rescale_intensity(array, in_range=(p2,p98))

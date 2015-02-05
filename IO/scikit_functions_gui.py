@@ -12,7 +12,7 @@ from skimage import img_as_float, io
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from scikit_functions import cannyfilter #Update as necessary
+import stats
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
@@ -29,7 +29,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
             self.Image2Float()
-            
+
         def Image2Float(self):
             self.f = open(self.fname, 'rb')
             self.image = io.imread(self.f)
@@ -41,7 +41,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.draw()
         
         def Plot_Function(self):
-            self.output = cannyfilter(self.array) #Updated to imported module as necessary           
+            self.output = adapteq(self.array) #Updated to imported module as necessary           
             self.mpl.canvas.ax.clear()
             self.mpl.canvas.ax.imshow(self.output, cmap=plt.cm.gray)                        
             self.mpl.canvas.draw()
@@ -104,4 +104,4 @@ if __name__=='__main__':
     
     #Something to do with the App & Cleanup?
     app.exec_()
-    atexit.register(form.cleanup)
+    #atexit.register(form.cleanup)
