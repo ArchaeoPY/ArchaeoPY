@@ -9,6 +9,7 @@ from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationTo
 
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.IO.image import array2image
 
 #import geoplot load module
 from geoplot import Load_Comp
@@ -28,19 +29,35 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             
         def Open_Geoplot(self):
-            self.fname = QtGui.QFileDialog.getOpenFileName()
+            self.fname = QtGui.QFileDialog.getOpenFileName(self,"Load CMPe", "C:\Geoplot\COMP",
+                                                 'Geoplot CMP FIle (*.cmp)')
+            self.grid_length = self.TravL_val.value()
+            self.grid_width = self.GridL_val.value()
+            self.sample_interval = self.TravI_val.value()
+            self.traverse_interval = self.GridI_val.value()
+            
+            self.output = Load_Comp(self.fname,self.grid_length,self.grid_width,self.sample_interval,self.traverse_interval)
+            
+            self.mean = np.nanmean(self.output)
+            self.std = np.nanstd(self.output)
+            
+            #Set PLotting ranges to be +- 1 SD
+            self.neg_val.setValue(self.mean - self.std)
+            self.pos_val.setValue(self.mean + self.std)
+            
+            
+        def Save_image(self):
+            self.o_fname = QtGui.QFileDialog.getSaveFileName(self,"Save Image", "",
+                                                 'PNG Image FIle (*.png)')
+            print self.output,self.pos_val.value(),self.neg_val.value(), self.o_fname,self.TravI_val.value(),self.GridI_val.value()               
+            array2image(self.output,self.pos_val.value(),self.neg_val.value(), self.o_fname,self.TravI_val.value(),self.GridI_val.value())
             
         def Plot_Function(self):
             #Get values from Options Grid
-            grid_length = self.TravL_val.value()
-            grid_width = self.GridL_val.value()
-            sample_interval = self.TravI_val.value()
-            traverse_interval = self.GridI_val.value()
-            
-            self.output = Load_Comp(self.fname,grid_length,grid_width,sample_interval,traverse_interval)
+
             self.mpl.canvas.ax.clear()
             print np.shape(self.output)
-            self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,grid_length,grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
+            self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,self.grid_length,self.grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
             self.mpl.canvas.draw()
 
             
@@ -62,7 +79,8 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.TravI_label = QtGui.QLabel('Sample Interval', self)
             self.TravI_val = QtGui.QDoubleSpinBox(self)
-            self.TravI_val.setValue(0.25)
+            self.TravI_val.setDecimals(3)
+            self.TravI_val.setValue(0.125)
             
             self.GridL_label = QtGui.QLabel('Grid Width', self)
             self.GridL_val = QtGui.QDoubleSpinBox(self)
@@ -100,12 +118,17 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.fname = self.Open_button.clicked.connect(self.Open_Geoplot)
             self.Button_Layout.addWidget(self.Open_button)
             
+            self.Save_button = QtGui.QPushButton('Save', self)
+            self.o_fname = self.Save_button.clicked.connect(self.Save_image)
+            self.Button_Layout.addWidget(self.Save_button)
+            
             self.pushButton_plot.clicked.connect(self.Plot_Function)
             self.pushButton_clear.clicked.connect(self.ClearPlot)
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"),self, self.Plot_Function)
-
+            
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+C"),self, self.copy_to_clipboard)
-   
+    
+        
         def __init__(self, parent = None):
             # initialization of the superclass
             super(ArchaeoPYMainWindow, self).__init__(parent)
