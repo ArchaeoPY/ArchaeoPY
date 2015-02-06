@@ -28,6 +28,19 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
+            #self.f = open(self.fname, 'rb')
+            self.data = np.genfromtxt(self.fname, names=True, delimiter='	',dtype=None)
+            #print self.data
+            self.x = self.data.dtype.names
+            #print self.data[self.data.dtype.names[1]]
+            #print self.data[self.data.dtype.names[2]]
+            
+            self.y = self.data.dtype.names
+            self.xcombo.clear()
+            self.xcombo.addItems(self.x)
+            self.ycombo.clear()
+            self.ycombo.addItems(self.y)
+            
         '''
         def Save_Stats(self):
             self.f = open(self.fname, 'rb')
@@ -38,52 +51,12 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)                        
 '''
         def Plot_Function(self):
-            self.f = open(self.fname, 'rb')
-            data = np.genfromtxt(self.fname, skip_header=1)
-            x = [':,0', ':,1', ':,2', ':,3', ':,4', ':,5', ':,6', ':,7', ':,8']
-            x_colm = x[self.xcombo.currentIndex()]
-            if x_colm == ':,0':
-                self.x = data[:,0]
-            if x_colm == ':,1':
-                self.x = data[:,1]
-            if x_colm == ':,2':
-                self.x = data[:,2]            
-            if x_colm == ':,3':
-                self.x = data[:,3]
-            if x_colm == ':,4':
-                self.x = data[:,4]
-            if x_colm == ':,5':
-                self.x = data[:,5]
-            if x_colm == ':,6':
-                self.x = data[:,6]
-            if x_colm == ':,7':
-                self.x = data[:,7]
-            if x_colm == ':,8':
-                self.x = data[:,8]
-            y = [':,0', ':,1', ':,2', ':,3', ':,4', ':,5', ':,6', ':,7', ':,8']
-            y_colm = y[self.ycombo.currentIndex()]
-            if y_colm == ':,0':
-                self.y = data[:,0]
-            if y_colm == ':,1':
-                self.y = data[:,1]
-            if y_colm == ':,2':
-                self.y = data[:,2]            
-            if y_colm == ':,3':
-                self.y = data[:,3]
-            if y_colm == ':,4':
-                self.y = data[:,4]
-            if y_colm == ':,5':
-                self.y = data[:,5]
-            if y_colm == ':,6':
-                self.y = data[:,6]
-            if y_colm == ':,7':
-                self.y = data[:,7]
-            if y_colm == ':,8':
-                self.y = data[:,8]
-            self.mpl.canvas.ax.scatter(self.x,self.y)
+            self.xval = self.data[self.data.dtype.names[self.xcombo.currentIndex()]]
+            self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]
+            self.mpl.canvas.ax.scatter(self.xval,self.yval)
             self.mpl.canvas.ax.axis('auto')
             #self.mpl.canvas.ax.set_xlim(xmin=np.min(self.x), xmax=(np.max(self.x)))
-            self.mpl.canvas.ax.set_ylim(ymin=np.min(self.y), ymax=(np.max(self.y)))
+            self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
             self.mpl.canvas.ax.set_autoscale_on(True)
             self.mpl.canvas.ax.autoscale_view(True,True,True)
             #self.mpl.canvas.ax.set_xlabel(self.xtitle, size = 15)
@@ -97,7 +70,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.Open_button = QtGui.QPushButton('Open', self)
             self.fname = self.Open_button.clicked.connect(self.Open_File)
-            self.fname = self.Open_button.clicked.connect(self.Plot_Function)
+            #self.fname = self.Open_button.clicked.connect(self.Plot_Function)
             self.Button_Layout.addWidget(self.Open_button)
             
             self.pushButton_plot.clicked.connect(self.Plot_Function)
@@ -130,22 +103,20 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+C"),self, self.copy_to_clipboard)
 
             self.xcombo = QtGui.QComboBox()
-            x = [':,0', ':,1', ':,2', ':,3', ':,4', ':,5', ':,6', ':,7', ':,8']
-            self.xcombo.addItems(x)
-            self.lbl = QtGui.QLabel('X values')
+            self.xcombo.addItems('X')
+            self.lbl = QtGui.QLabel('X Values')
             self.lbl.setAlignment(QtCore.Qt.AlignHCenter)            
             self.toolbar_grid.addWidget(self.xcombo)
             self.toolbar_grid.addWidget(self.lbl)
 
             self.ycombo = QtGui.QComboBox()
-            y = [':,0', ':,1', ':,2', ':,3', ':,4', ':,5', ':,6', ':,7', ':,8']
-            self.ycombo.addItems(y)
+            self.ycombo.addItems('Y')
             self.lbl = QtGui.QLabel('Y values')
             self.lbl.setAlignment(QtCore.Qt.AlignHCenter)            
             self.toolbar_grid.addWidget(self.ycombo)
             self.toolbar_grid.addWidget(self.lbl)
             
-            self.xlabel = QtGui.QInputDialog.getText(self, 'X-axis Label')
+            #self.xlabel = QtGui.QInputDialog.getText(self, 'X-axis Label')
             
             #Button_layout is a QT desginer Grid Layout.
             self.toolbar_grid.addWidget(self.navi_toolbar)

@@ -12,7 +12,7 @@ from skimage import img_as_float, io
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-import stats
+from scikit_functions import adapteq
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
@@ -34,6 +34,8 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.f = open(self.fname, 'rb')
             self.image = io.imread(self.f)
             self.array = img_as_float(self.image)
+            #np.set_printoptions(threshold=np.nan)
+            #print img_as_float(self.image)
             
         def Plot_Original_Image(self):
             self.mpl.canvas.ax.clear()
