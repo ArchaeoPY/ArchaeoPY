@@ -4,8 +4,9 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+import matplotlib.cm as cm
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
-
+import itertools
 
 
 # import the MainWindow widget from the converted .ui files
@@ -21,6 +22,11 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def ClearPlot(self):
             self.mpl.canvas.ax.clear()
             self.mpl.canvas.draw()
+            #Clears Legend
+            self.legend.remove()
+            self.legend_definitions()
+            self.mpl.canvas.draw()
+            
             
         def copy_to_clipboard(self):
             pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
@@ -41,6 +47,9 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.ycombo.clear()
             self.ycombo.addItems(self.y)
             
+            #Clears Legend
+            self.legend_definitions()
+            
         '''
         def Save_Stats(self):
             self.f = open(self.fname, 'rb')
@@ -51,9 +60,10 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)                        
 '''
         def Plot_Function(self):
+            self.legend.remove()
             self.xval = self.data[self.data.dtype.names[self.xcombo.currentIndex()]]
             self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]
-            self.mpl.canvas.ax.scatter(self.xval,self.yval)
+            temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color=next(self.colors), marker=next(self.markers))
             self.mpl.canvas.ax.axis('auto')
             #self.mpl.canvas.ax.set_xlim(xmin=np.min(self.x), xmax=(np.max(self.x)))
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
@@ -62,12 +72,22 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #self.mpl.canvas.ax.set_xlabel(self.xtitle, size = 15)
             #self.mpl.canvas.ax.set_ylabel(self.ytitle, size = 15)
             #self.mpl.canvas.ax.set_title(self.title, size = 15)
+            self.handles.append(temp_scatter)
+            self.labels.append(self.data.dtype.names[self.ycombo.currentIndex()])
+            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
             self.mpl.canvas.draw()
         
-                        
+        def legend_definitions(self):
+            self.handles = []
+            self.labels = []
+            
+            self.colors = itertools.cycle(["b", "g", "r","c","m","y","b"])
+            self.markers = itertools.cycle([".","D","p","*","+"])
+            
+            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
+
         def Button_Definitions(self):
             self.firstrun=True
-            
             self.Open_button = QtGui.QPushButton('Open', self)
             self.fname = self.Open_button.clicked.connect(self.Open_File)
             #self.fname = self.Open_button.clicked.connect(self.Plot_Function)
