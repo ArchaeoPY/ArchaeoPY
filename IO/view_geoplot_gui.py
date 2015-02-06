@@ -25,7 +25,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def copy_to_clipboard(self):
             pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
             QtGui.QApplication.clipboard().setPixmap(pixmap)
-            
+           
             
         def Open_Geoplot(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
@@ -43,27 +43,9 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,grid_length,grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
             self.mpl.canvas.draw()
 
-            
+         
+ #reordered fields to match layout on window, to allow "tab" when navigating                
         def plot_options(self):
-            self.neg_label = QtGui.QLabel('Neg Value', self)
-            self.neg_val = QtGui.QDoubleSpinBox(self)
-            self.neg_val.setRange(-100, 100)
-            self.neg_val.setValue(-1)
-            
-            self.pos_label = QtGui.QLabel('Pos Value', self)            
-            self.pos_val = QtGui.QDoubleSpinBox(self)
-            self.pos_val.setRange(-100, 100)
-            self.pos_val.setValue(2)
-            
-            self.TravL_label = QtGui.QLabel('Trav Length', self)
-            self.TravL_val = QtGui.QDoubleSpinBox(self)
-            self.TravL_val.setRange(0, 1000)
-            self.TravL_val.setValue(30)
-            
-            self.TravI_label = QtGui.QLabel('Sample Interval', self)
-            self.TravI_val = QtGui.QDoubleSpinBox(self)
-            self.TravI_val.setValue(0.25)
-            
             self.GridL_label = QtGui.QLabel('Grid Width', self)
             self.GridL_val = QtGui.QDoubleSpinBox(self)
             self.GridL_val.setRange(0, 1000)
@@ -73,6 +55,26 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.GridI_val = QtGui.QDoubleSpinBox(self)
             self.GridI_val.setValue(1)
             
+            self.TravL_label = QtGui.QLabel('Trav Length', self)
+            self.TravL_val = QtGui.QDoubleSpinBox(self)
+            self.TravL_val.setRange(0, 1000)
+            self.TravL_val.setValue(30)
+                    
+            self.TravI_label = QtGui.QLabel('Sample Interval', self)
+            self.TravI_val = QtGui.QDoubleSpinBox(self)
+            self.TravI_val.setValue(0.25)
+
+            self.neg_label = QtGui.QLabel('Neg Value', self)
+            self.neg_val = QtGui.QDoubleSpinBox(self)
+            self.neg_val.setRange(-2000, 2000)
+            self.neg_val.setValue(-1)
+                    
+            self.pos_label = QtGui.QLabel('Pos Value', self)            
+            self.pos_val = QtGui.QDoubleSpinBox(self)
+            self.pos_val.setRange(-2000, 2000)
+            self.pos_val.setValue(2)
+
+
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_label)
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_val)
             self.Grid_horizontal_Layout_1.addWidget(self.TravI_label)
@@ -82,7 +84,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.Grid_horizontal_Layout_2.addWidget(self.GridL_val)
             self.Grid_horizontal_Layout_2.addWidget(self.GridI_label)
             self.Grid_horizontal_Layout_2.addWidget(self.GridI_val)
-            
+                
             self.Grid_horizontal_Layout_3 = QtGui.QHBoxLayout()
             self.Grid_horizontal_Layout_3.setObjectName("Grid_horizontal_Layout_3")
             self.Options_Grid.addLayout(self.Grid_horizontal_Layout_3, 2, 0, 1, 1)
@@ -91,15 +93,15 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.Grid_horizontal_Layout_3.addWidget(self.neg_val)
             self.Grid_horizontal_Layout_3.addWidget(self.pos_label)
             self.Grid_horizontal_Layout_3.addWidget(self.pos_val)
-            
-            
+        
+                
         def Button_Definitions(self):
             self.firstrun=True
             
             self.Open_button = QtGui.QPushButton('Open', self)
             self.fname = self.Open_button.clicked.connect(self.Open_Geoplot)
             self.Button_Layout.addWidget(self.Open_button)
-            
+
             self.pushButton_plot.clicked.connect(self.Plot_Function)
             self.pushButton_clear.clicked.connect(self.ClearPlot)
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"),self, self.Plot_Function)
