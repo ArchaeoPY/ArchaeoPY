@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import os
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -11,7 +12,7 @@ from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationTo
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import geoplot load module
-from geoplot import Load_Comp
+from geoplot import Load_Comp, Load_Geoplot_CMD
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
@@ -29,6 +30,14 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def Open_Geoplot(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
+            print self.fname
+            split = os.path.splitext(self.fname)
+            self.cmdname = split[0] + '.CMD'
+            grid_length,grid_width,sample_interval,traverse_interval = Load_Geoplot_CMD(self.cmdname)
+            self.TravL_val.setValue(grid_length)
+            self.GridL_val.setValue(grid_width)
+            self.TravI_val.setValue(sample_interval)
+            self.GridI_val.setValue(traverse_interval)
             
         def Plot_Function(self):
             #Get values from Options Grid
@@ -36,7 +45,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             grid_width = self.GridL_val.value()
             sample_interval = self.TravI_val.value()
             traverse_interval = self.GridI_val.value()
-            
+
             self.output = Load_Comp(self.fname,grid_length,grid_width,sample_interval,traverse_interval)
             self.mpl.canvas.ax.clear()
             print np.shape(self.output)
@@ -73,7 +82,6 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.pos_val = QtGui.QDoubleSpinBox(self)
             self.pos_val.setRange(-2000, 2000)
             self.pos_val.setValue(2)
-
 
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_label)
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_val)
@@ -136,6 +144,36 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.toolbar_grid.addWidget(self.navi_toolbar)
             self.Button_Definitions()
             self.plot_options()
+
+        #Low and High Pass filters
+            #Calculations required
+            """
+            fc = 0.1  # Cutoff frequency as a fraction of the sample rate (in (Load_comp)).
+            b = 0.08  # Transition band, as a fraction of the sample rate (in (Load_comp)).
+            N = int(np.ceil((4 / b)))
+            if not N % 2: N += 1  # Make sure that N is odd.
+            n = np.arange(Load_comp)
+ 
+             # Compute a low-pass filter (windowed sinc filter)
+             h = np.sinc(2 * fc * (n - (N - 1) / 2.))
+             # Compute Blackman window.
+                 w = 0.42 - 0.5 * np.cos(2 * np.pi * n / (N - 1)) + \
+                     0.08 * np.cos(4 * np.pi * n / (N - 1))
+                 # or just: w = np.blackman(N)
+             h = h * w
+             h = h / np.sum(h)
+ 
+             # Create a high-pass filter from the low-pass filter through spectral inversion.
+             h = -h
+             h[(N - 1) / 2] += 1
+             """
+             #adding buttons
+"""             
+             a = self.navi_toolbar.addAction(self.navi_toolbar._icon('NAME OF ICON.png'), 'Low Pass',
+                                            self.navi_toolbar.X)
+             a = self.navi_toolbar.addAction(self.navi_toolbar._icon('NAME OF ICON.png'), 'High Pass',
+                                            self.navi_toolbar.X)
+             """
             
 if __name__=='__main__':
     #Creates Main UI window
