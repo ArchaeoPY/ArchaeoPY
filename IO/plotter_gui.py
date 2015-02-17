@@ -90,6 +90,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.legend.remove()
             self.xval = self.data[self.data.dtype.names[self.xcombo.currentIndex()]]
             self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]
+            self.yval = self.yval - np.median(self.yval)
             temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color=next(self.colors), marker=next(self.markers))
             self.mpl.canvas.ax.axis('auto')
             #self.mpl.canvas.ax.set_xlim(xmin=np.min(self.x), xmax=(np.max(self.x)))
