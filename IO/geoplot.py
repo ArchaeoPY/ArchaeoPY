@@ -26,12 +26,9 @@ def Load_Comp(fname,grid_length,grid_width,sample_interval,traverse_interval):
     #Opens & loads bytewise the cmp file into numpy array
     f = open(fname, 'rb')
     comp_array = np.fromfile(f, dtype='f')
-<<<<<<< HEAD
     f.close()
-=======
     print np.shape(comp_array)
     
->>>>>>> origin/master
     #calculates desired shape & reshapes loaded data
     shape = (int(grid_width / traverse_interval),int(grid_length / sample_interval))    
     comp_array = comp_array.reshape(shape)
@@ -39,16 +36,13 @@ def Load_Comp(fname,grid_length,grid_width,sample_interval,traverse_interval):
     #replaces geooplot dummy values with Nan
     comp_array[comp_array==2047.5] = np.nan
     
-<<<<<<< HEAD
     #define min and max values
     M = "Min, Max and Mean:"
     print M
     print np.nanmin(comp_array), np.nanmax(comp_array), np.nanmean(comp_array)
 
 
-=======
     print np.nan
->>>>>>> origin/master
     #Returns modified array
     return comp_array
 
