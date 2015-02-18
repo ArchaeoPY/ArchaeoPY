@@ -62,7 +62,10 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
             #self.f = open(self.fname, 'rb')
-            self.data = np.genfromtxt(self.fname, names=True, delimiter='	',dtype=None)
+            with open(self.fname, 'r') as f:
+                num_cols = len(f.readline().split('	'))-1
+                f.seek(0)
+                self.data = np.genfromtxt(f, names=True, delimiter='	',dtype=None,filling_values = np.nan, usecols=(range(0,num_cols)))
             #print self.data
             self.x = self.data.dtype.names
             #print self.data[self.data.dtype.names[1]]
