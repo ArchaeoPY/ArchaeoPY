@@ -3,7 +3,6 @@ import sys
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 from skimage import img_as_float, io
 
@@ -13,15 +12,18 @@ from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
 from scikit_functions import adapteq
+
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
         
         """Customization for Qt Designer created window"""
-    
+        
+        #Clears matplotlib plotting widget
         def ClearPlot(self):
             self.mpl.canvas.ax.clear()
             self.mpl.canvas.draw()
             
+        #Copies image to clipboard    
         def copy_to_clipboard(self):
             pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
             QtGui.QApplication.clipboard().setPixmap(pixmap)
@@ -29,19 +31,21 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def Open_File(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
             self.Image2Float()
-
+        
+        #Converts image to an array of floating points
         def Image2Float(self):
             self.f = open(self.fname, 'rb')
             self.image = io.imread(self.f)
             self.array = img_as_float(self.image)
-            #np.set_printoptions(threshold=np.nan)
-            #print img_as_float(self.image)
             
+        #Displays the original, opened image    
         def Plot_Original_Image(self):
             self.mpl.canvas.ax.clear()
             self.mpl.canvas.ax.imshow(self.image)                        
             self.mpl.canvas.draw()
         
+        #Applies the imported scikit image algorithm
+        #Good be updated to select the processing algorithm from a menu..... 
         def Plot_Function(self):
             self.output = adapteq(self.array) #Updated to imported module as necessary           
             self.mpl.canvas.ax.clear()
