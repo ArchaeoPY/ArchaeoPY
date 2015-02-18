@@ -55,6 +55,28 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
          
  #reordered fields to match layout on window, to allow "tab" when navigating                
         def plot_options(self):
+<<<<<<< HEAD
+=======
+            self.neg_label = QtGui.QLabel('Neg Value', self)
+            self.neg_val = QtGui.QDoubleSpinBox(self)
+            self.neg_val.setRange(-2047, 2047)
+            self.neg_val.setValue(-1)
+            
+            self.pos_label = QtGui.QLabel('Pos Value', self)            
+            self.pos_val = QtGui.QDoubleSpinBox(self)
+            self.pos_val.setRange(-2047, 2047)
+            self.pos_val.setValue(2)
+            
+            self.TravL_label = QtGui.QLabel('Trav Length', self)
+            self.TravL_val = QtGui.QDoubleSpinBox(self)
+            self.TravL_val.setRange(0, 1000)
+            self.TravL_val.setValue(30)
+            
+            self.TravI_label = QtGui.QLabel('Sample Interval', self)
+            self.TravI_val = QtGui.QDoubleSpinBox(self)
+            self.TravI_val.setValue(0.25)
+            
+>>>>>>> origin/master
             self.GridL_label = QtGui.QLabel('Grid Width', self)
             self.GridL_val = QtGui.QDoubleSpinBox(self)
             self.GridL_val.setRange(0, 1000)
@@ -109,14 +131,14 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.Open_button = QtGui.QPushButton('Open', self)
             self.fname = self.Open_button.clicked.connect(self.Open_Geoplot)
             self.Button_Layout.addWidget(self.Open_button)
-
+"""suggestion:           a.setToolTip('Set CMP file and autofill values from CMD')"""
+            
             self.pushButton_plot.clicked.connect(self.Plot_Function)
             self.pushButton_clear.clicked.connect(self.ClearPlot)
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"),self, self.Plot_Function)
-            
+
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+C"),self, self.copy_to_clipboard)
-    
-        
+   
         def __init__(self, parent = None):
             # initialization of the superclass
             super(ArchaeoPYMainWindow, self).__init__(parent)

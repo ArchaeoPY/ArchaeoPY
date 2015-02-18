@@ -10,9 +10,9 @@ from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationTo
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI.mpl import Ui_MainWindow
 
-#import ArchaeoPY modules
+#import geoplot load module
 from geoplot import Load_Comp
-from xy import comp2dxf
+from geophysical_processing import median_filter
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
@@ -30,21 +30,32 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def Open_Geoplot(self):
             self.fname = QtGui.QFileDialog.getOpenFileName()
-            self.Plot_Function()
             
         def Plot_Function(self):
             #Get values from Options Grid
-            self.grid_length = self.TravL_val.value()
-            self.grid_width = self.GridL_val.value()
-            self.sample_interval = self.TravI_val.value()
-            self.traverse_interval = self.GridI_val.value()
+            grid_length = self.TravL_val.value()
+            grid_width = self.GridL_val.value()
+            sample_interval = self.TravI_val.value()
+            traverse_interval = self.GridI_val.value()
             
-            self.output = Load_Comp(self.fname,self.grid_length,self.grid_width,self.sample_interval,self.traverse_interval)
+            self.output = Load_Comp(self.fname,grid_length,grid_width,sample_interval,traverse_interval)
             self.mpl.canvas.ax.clear()
             print np.shape(self.output)
-            self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,self.grid_length,self.grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
+            self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,grid_length,grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
             self.mpl.canvas.draw()
-
+            
+        def Plot_Median_Filter(self):
+            grid_length = self.TravL_val.value()
+            grid_width = self.GridL_val.value()
+            sample_interval = self.TravI_val.value()
+            traverse_interval = self.GridI_val.value()
+            
+            self.output = Load_Comp(self.fname,grid_length,grid_width,sample_interval,traverse_interval)
+            self.filter_output = median_filter(self.output)            
+            self.mpl.canvas.ax.clear()
+            print np.shape(self.output)
+            self.mpl.canvas.ax.imshow(self.filter_output,cmap=plt.cm.Greys,extent=[0,grid_length,grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
+            self.mpl.canvas.draw()
             
         def plot_options(self):
             self.neg_label = QtGui.QLabel('Neg Value', self)
@@ -75,16 +86,6 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.GridI_val = QtGui.QDoubleSpinBox(self)
             self.GridI_val.setValue(1)
             
-            self.Scale_label  = QtGui.QLabel('Scale Value', self)
-            self.Scale_val =QtGui.QDoubleSpinBox(self)
-            self.Scale_val.setRange(1, 5000)
-            self.Scale_val.setValue(500)
-            
-            self.Clip_label  = QtGui.QLabel('Clipping Value', self)
-            self.Clip_val = QtGui.QDoubleSpinBox(self)
-            self.Clip_val.setRange(0.1, 100)
-            self.Clip_val.setValue(15)
-            
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_label)
             self.Grid_horizontal_Layout_1.addWidget(self.TravL_val)
             self.Grid_horizontal_Layout_1.addWidget(self.TravI_label)
@@ -104,15 +105,6 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.Grid_horizontal_Layout_3.addWidget(self.pos_label)
             self.Grid_horizontal_Layout_3.addWidget(self.pos_val)
             
-            self.Grid_horizontal_Layout_4 = QtGui.QHBoxLayout()
-            self.Grid_horizontal_Layout_4.setObjectName("Grid_horizontal_Layout_4")
-            self.Options_Grid.addLayout(self.Grid_horizontal_Layout_4, 3, 0, 1, 1)
-            
-            self.Grid_horizontal_Layout_4.addWidget(self.Scale_label)
-            self.Grid_horizontal_Layout_4.addWidget(self.Scale_val)
-            self.Grid_horizontal_Layout_4.addWidget(self.Clip_label)
-            self.Grid_horizontal_Layout_4.addWidget(self.Clip_val)
-            
             
         def Button_Definitions(self):
             self.firstrun=True
@@ -121,27 +113,29 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.fname = self.Open_button.clicked.connect(self.Open_Geoplot)
             self.Button_Layout.addWidget(self.Open_button)
             
-            self.Save_button = QtGui.QPushButton('Save as DXF',self)
-            self.Save_button.clicked.connect(self.dxf_save_button)
-            self.Button_Layout.addWidget(self.Save_button)
-            
             self.pushButton_plot.clicked.connect(self.Plot_Function)
             self.pushButton_clear.clicked.connect(self.ClearPlot)
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"),self, self.Plot_Function)
             
+            self.Save_button = QtGui.QPushButton('Save as .txt',self)
+            self.Save_button.clicked.connect(self.save_as_txt)
+            self.Button_Layout.addWidget(self.Save_button)          
+            
+            self.pushButton = QtGui.QPushButton('Median Filter',self)
+            self.pushButton.clicked.connect(self.Plot_Median_Filter)
+            self.pushButton_clear.clicked.connect(self.ClearPlot)
+            #QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"),self, self.Plot_Function)  
+            
             QtGui.QShortcut(QtGui.QKeySequence("Ctrl+C"),self, self.copy_to_clipboard)
-            
-        def dxf_save_button(self):
-            self.dxf_name  = QtGui.QFileDialog.getSaveFileName(self)
-            self.Scale = self.Scale_val.value()
-            self.Clip = self.Clip_val.value()
-            
-            QtGui.QMessageBox.about(self, "This May take a second", "Saving DXF's can be slow, please be paient. \n A dialogue will open when finished")
-            comp2dxf(self.output,self.dxf_name,self.sample_interval,self.traverse_interval,self.Scale,self.Clip, 'CMP2DXF')
-            QtGui.QMessageBox.about(self, "Thanks for waiting", "Sorry about the wait, DXFengine is slow. \n The DXF has been saved. ")        
+    
+        def save_as_txt(self):
+            self.txt_name = QtGui.QFileDialog.getSaveFileName(self)
+            np.savetxt(self.txt_name + '.txt', self.output)
         
-      
-            
+        
+                            
+        
+        
         def __init__(self, parent = None):
             # initialization of the superclass
             super(ArchaeoPYMainWindow, self).__init__(parent)
