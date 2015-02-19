@@ -20,154 +20,223 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
         def copy_to_clipboard(self):
             pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
-            QtGui.QApplication.clipboard().setPixmap(pixmap)
-        
-            
-        def Plot_Function(self):
-            #Get values from Options Grid
-            grid_length = self.TravL_val.value()
-            grid_width = self.GridL_val.value()
-            sample_interval = self.TravI_val.value()
-            traverse_interval = self.GridI_val.value()
-            
-            self.output = Load_Comp(self.fname,grid_length,grid_width,sample_interval,traverse_interval)
-            self.mpl.canvas.ax.clear()
-            print np.shape(self.output)
-            self.mpl.canvas.ax.imshow(self.output,cmap=plt.cm.Greys,extent=[0,grid_length,grid_width,0], aspect='equal',interpolation='none',vmin = self.neg_val.value(), vmax = self.pos_val.value())                        
-            self.mpl.canvas.draw()
-        
+            QtGui.QApplication.clipboard().setPixmap(pixmap)        
+                    
         def press_open(self):
             self.fname = QtGui.QFileDialog.getExistingDirectory(self, "Select Project")
             open_project(self.fname, self)
             self.statusbar.showMessage("press_open returned")
             self.repaint()
 
+        def Open_File(self):
+            self.fname = QtGui.QFileDialog.getOpenFileName()
+            #self.f = open(self.fname, 'rb')
+            with open(self.fname, 'r') as f:
+                num_cols = len(f.readline().split('	'))-1
+                f.seek(0)
+                data = np.genfromtxt(f, names=True, delimiter='	',dtype=None,filling_values = np.nan, usecols=(range(0,num_cols)))
+                return data
+            #print data
+            #print "beak"
+            #return data
+            #print data
+            #print "break"
+            
+        def top_data(self):
+            #print "beak"            
+            self.top_data = self.Open_File()
+            print self.top_data.dtype.names
+            #print data
+            self.top_x = self.top_data.dtype.names
+            #print self.data[self.data.dtype.names[1]]
+            #print self.data[self.data.dtype.names[2]]
+            #return self.top_x
+            self.top_y = self.top_data.dtype.names
+            #return self.top_y
+            self.top_xcombo.clear()
+            self.top_xcombo.addItems(self.top_x)
+            self.top_ycombo.clear()
+            self.top_ycombo.addItems(self.top_y)
+            
+            
+            #Clears Legend
+            #self.legend_definitions()
+
+        def legend_definitions(self):
+            self.handles = []
+            self.labels = []
+            
+            self.colors = itertools.cycle(["b", "g", "r","c","m","y","b"])
+            self.markers = itertools.cycle([".","D","p","*","+"])
+            
+            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
+
+        def openInputDialog(self):
+                    x_axis, result = QtGui.QInputDialog.getText(self, "X axis", "Specify units")
+                    if result:
+                        self.x_axis = x_axis
+                    y_axis, result = QtGui.QInputDialog.getText(self, "Y axis", "Specify units")
+                    if result:
+                        self.y_axis = y_axis
+        
         def button_grid(self):
             #An Expanding Spacer Item to be used anywhere..
             spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
             self.toolbar_grid.addItem(spacerItem, 0, 0, 1, 1)
             self.toolbar_grid.addItem(spacerItem, 0, 4, 1, 1)
 
+            #self.Grid_horizontal_Layout_2.addItem(spacerItem, 0)
+            #self.Grid_horizontal_Layout_2.addItem(spacerItem, 4)
+
             #Layout for processing toolbbox
-            self.Traverse_selector_layout = QtGui.QGridLayout()
-            self.traverse_box = QtGui.QGroupBox()
-            self.traverse_box.setLayout(self.Traverse_selector_layout)
+            self.top_plot_layout = QtGui.QGridLayout()
+            self.top_plot_box = QtGui.QGroupBox()
+            self.top_plot_box.setLayout(self.top_plot_layout)
             
-            self.first_pass_layout = QtGui.QGridLayout()
-            self.first_pass_box = QtGui.QGroupBox()
-            self.first_pass_box.setLayout(self.first_pass_layout)
+            self.middle_plot_layout = QtGui.QGridLayout()
+            self.middle_plot_box = QtGui.QGroupBox()
+            self.middle_plot_box.setLayout(self.middle_plot_layout)
             
-            self.second_pass_layout = QtGui.QGridLayout()
-            self.second_pass_box = QtGui.QGroupBox()
-            self.second_pass_box.setLayout(self.second_pass_layout)
+            self.bottom_plot_layout = QtGui.QGridLayout()
+            self.bottom_plot_box = QtGui.QGroupBox()
+            self.bottom_plot_box.setLayout(self.bottom_plot_layout)
             
             #Traverse selector grid box
-            self.Grid_horizontal_Layout_2.addWidget(self.traverse_box, 0)
-            #self.toolbar_grid.addLayout(self.Traverse_selector_layout, 0, 1, 1, 1)
+            self.Grid_horizontal_Layout_2.addWidget(self.top_plot_box, 0)
+            #self.toolbar_grid.addLayout(self.top_plot_layout, 0, 1, 1, 1)
             
-            self.trav_no_text = QtGui.QLabel('Traverse Number', self)
-            self.trav_no = QtGui.QSpinBox(self)
-            self.trav_no.setRange(0, 9999)
-            self.trav_no.setValue(1)
+            string = '<span style=" font-size:14pt;; font-weight:600;">Top Plot</span>'       
+            self.top_plot_layout_text = QtGui.QLabel(string, self)
             
-            self.cb_second_pass = QtGui.QCheckBox('Run Second Filter', self)
-            self.cb_second_pass.setChecked(True)
-            self.pb_save = QtGui.QPushButton('Save', self)
+            #Defines push buttons for top plot 
+            self.top_plot_buttons = QtGui.QButtonGroup()
+            self.top_open_button = QtGui.QPushButton('Open', self)
+            self.top_fname = self.top_open_button.clicked.connect(self.top_data)
+            self.top_plot_buttons.addButton(self.top_open_button)
+            self.top_plot_button = QtGui.QPushButton('Plot', self)
+            #self.top_fname = self.top_open_button.clicked.connect(self.Open_File)
+            self.top_plot_buttons.addButton(self.top_plot_button)
+            self.top_clear_button = QtGui.QPushButton('Clear', self)
+            #self.top_fname = self.top_open_button.clicked.connect(self.Open_File)
+            self.top_plot_buttons.addButton(self.top_clear_button)
+            self.top_plot_input = QtGui.QButtonGroup()
+            self.top_units = QtGui.QPushButton('Input Units', self)
+            self.top_units.clicked.connect(self.openInputDialog)
+
+            #Defines combo boxes for top plot
+            self.top_plot_combo = QtGui.QButtonGroup()
+            self.top_xcombo = QtGui.QComboBox()
+            self.top_xcombo.addItems('X')
+            self.top_xcombo_lbl = QtGui.QLabel('X Values', self)
+            self.top_ycombo = QtGui.QComboBox()
+            self.top_ycombo.addItems('Y')
+            self.top_ycombo_lbl = QtGui.QLabel('Y Values', self)
             
-            self.Traverse_selector_layout.addWidget(self.trav_no_text, 1,0)
-            self.Traverse_selector_layout.addWidget(self.trav_no,2,0)
-            self.Traverse_selector_layout.addWidget(self.cb_second_pass,3,0)
-            self.Traverse_selector_layout.addWidget(self.pb_save, 5,0)
+
+            self.top_plot_layout.addWidget(self.top_plot_layout_text, 0,0,1,4)            
+            self.top_plot_layout.addWidget(self.top_open_button, 1,0)
+            self.top_plot_layout.addWidget(self.top_plot_button, 2,0)
+            self.top_plot_layout.addWidget(self.top_clear_button, 3,0)
+            self.top_plot_layout.addWidget(self.top_units, 4,0)
             
-            self.Traverse_selector_layout.addItem(spacerItem, 0, 0, 1, 1)
-            self.Traverse_selector_layout.addItem(spacerItem, 3, 0, 1, 1)
+            self.top_plot_layout.addWidget(self.top_xcombo_lbl, 1,1)            
+            self.top_plot_layout.addWidget(self.top_xcombo, 2,1)
+            self.top_plot_layout.addWidget(self.top_ycombo_lbl, 3,1)            
+            self.top_plot_layout.addWidget(self.top_ycombo, 4,1)
+                      
+            self.top_plot_layout.addItem(spacerItem, 0, 0, 1, 1)
+            self.top_plot_layout.addItem(spacerItem, 3, 0, 1, 1)
             
             #1st Pass Selector Box
-            self.Grid_horizontal_Layout_2.addWidget(self.first_pass_box, 1)
-            #self.toolbar_grid.addLayout(self.first_pass_layout, 0, 2, 1, 1)
+            self.Grid_horizontal_Layout_2.addWidget(self.middle_plot_box, 1)
+            #self.toolbar_grid.addLayout(self.middle_plot_layout, 0, 2, 1, 1)
             
             #Title of Box. HTML required to change colour & weight
-            string = '<span style=" font-size:14pt;; font-weight:600;">1st Pass</span>'       
-            self.first_pass_layout_text = QtGui.QLabel(string, self)
+            string = '<span style=" font-size:14pt;; font-weight:600;">Middle Plot</span>'       
+            self.middle_plot_layout_text = QtGui.QLabel(string, self)
             
-            #Creates RadoButtons
-            self.rb_1_radio_group = QtGui.QButtonGroup()
-            self.rb_1_zero_median  = QtGui.QRadioButton('Zero Median', self)
-            self.rb_1_radio_group.addButton(self.rb_1_zero_median)
-            self.rb_1_linear_median  = QtGui.QRadioButton('Linear Median', self)
-            self.rb_1_radio_group.addButton(self.rb_1_linear_median)
-            self.rb_1_poly_median  = QtGui.QRadioButton('Poly Median', self)
-            self.rb_1_radio_group.addButton(self.rb_1_poly_median)
-            self.rb_1_roll_median  = QtGui.QRadioButton('Rolling Median', self)
-            self.rb_1_radio_group.addButton(self.rb_1_roll_median)
+            self.middle_plot_buttons = QtGui.QButtonGroup()
+            self.middle_open_button = QtGui.QPushButton('Open', self)
+            self.middle_fname = self.middle_open_button.clicked.connect(self.top_data)
+            self.middle_plot_buttons.addButton(self.middle_open_button)
+            self.middle_plot_button = QtGui.QPushButton('Plot', self)
+            #self.middle_fname = self.middle_open_button.clicked.connect(self.Open_File)
+            self.middle_plot_buttons.addButton(self.middle_plot_button)
+            self.middle_clear_button = QtGui.QPushButton('Clear', self)
+            #self.middle_fname = self.middle_open_button.clicked.connect(self.Open_File)
+            self.middle_plot_buttons.addButton(self.middle_clear_button)
+            self.middle_plot_input = QtGui.QButtonGroup()
+            self.middle_units = QtGui.QPushButton('Input Units', self)
+            self.middle_units.clicked.connect(self.openInputDialog)
+
+            #Defines combo boxes for middle plot
+            self.middle_plot_combo = QtGui.QButtonGroup()
+            self.middle_xcombo = QtGui.QComboBox()
+            self.middle_xcombo.addItems('X')
+            self.middle_xcombo_lbl = QtGui.QLabel('X Values', self)
+            self.middle_ycombo = QtGui.QComboBox()
+            self.middle_ycombo.addItems('Y')
+            self.middle_ycombo_lbl = QtGui.QLabel('Y Values', self)
             
-            #Creates Spinboxes
-            self.sb_1_neg_limit_text = QtGui.QLabel('Filter Lower Limit', self)
-            self.sb_1_neg_limit = QtGui.QDoubleSpinBox(self)
-            self.sb_1_neg_limit.setRange(-2047.5, 2047.5)
-            self.sb_1_neg_limit.setValue(-15)
+
+            self.middle_plot_layout.addWidget(self.middle_plot_layout_text, 0,0,1,4)            
+            self.middle_plot_layout.addWidget(self.middle_open_button, 1,0)
+            self.middle_plot_layout.addWidget(self.middle_plot_button, 2,0)
+            self.middle_plot_layout.addWidget(self.middle_clear_button, 3,0)
+            self.middle_plot_layout.addWidget(self.middle_units, 4,0)
+            
+            self.middle_plot_layout.addWidget(self.middle_xcombo_lbl, 1,1)            
+            self.middle_plot_layout.addWidget(self.middle_xcombo, 2,1)
+            self.middle_plot_layout.addWidget(self.middle_ycombo_lbl, 3,1)            
+            self.middle_plot_layout.addWidget(self.middle_ycombo, 4,1)
  
-            self.sb_1_pos_limit_text = QtGui.QLabel('Filter Upper Limit', self)
-            self.sb_1_pos_limit = QtGui.QDoubleSpinBox(self)
-            self.sb_1_pos_limit.setRange(-2047.5, 2047.5)
-            self.sb_1_pos_limit.setValue(15)
-            
-            #Adds radio & Spinboxes to 1st pass box
-            self.first_pass_layout.addWidget(self.first_pass_layout_text, 0,0,1,4)
-            self.first_pass_layout.addWidget(self.rb_1_zero_median, 1,0)
-            self.first_pass_layout.addWidget(self.rb_1_linear_median, 2,0)
-            self.first_pass_layout.addWidget(self.rb_1_poly_median, 3,0)
-            self.first_pass_layout.addWidget(self.rb_1_roll_median, 4,0)
-            
-            self.first_pass_layout.addWidget(self.sb_1_neg_limit_text, 1,1)
-            self.first_pass_layout.addWidget(self.sb_1_neg_limit, 2,1)
-            self.first_pass_layout.addWidget(self.sb_1_pos_limit_text, 3,1)
-            self.first_pass_layout.addWidget(self.sb_1_pos_limit, 4,1)
-            
-            
-            #2nd Pass Selector Box
-            self.Grid_horizontal_Layout_2.addWidget(self.second_pass_box, 2)
-            #self.toolbar_grid.addLayout(self.second_pass_layout, 0, 3, 1, 1)
+
+           
+            #Bottom Plot Selector Box
+            self.Grid_horizontal_Layout_2.addWidget(self.bottom_plot_box, 2)
+            #self.toolbar_grid.addLayout(self.bottom_plot_layout, 0, 3, 1, 1)
             #Title of Box. HTML required to change colour & weight
-            string = '<span style=" font-size:14pt;; font-weight:600;">2nd Pass</span>'       
-            self.second_pass_layout_text = QtGui.QLabel(string, self)
+            string = '<span style=" font-size:14pt;; font-weight:600;">Bottom Plot</span>'       
+            self.bottom_plot_layout_text = QtGui.QLabel(string, self)
             
-            #Creates RadoButtons
-            self.rb_2_radio_group = QtGui.QButtonGroup()
-            self.rb_2_zero_median  = QtGui.QRadioButton('Zero Median', self)
-            self.rb_2_radio_group.addButton(self.rb_2_zero_median)
-            self.rb_2_linear_median  = QtGui.QRadioButton('Linear Median', self)
-            self.rb_2_radio_group.addButton(self.rb_2_linear_median)
-            self.rb_2_poly_median  = QtGui.QRadioButton('Poly Median', self)
-            self.rb_2_radio_group.addButton(self.rb_2_poly_median)
-            self.rb_2_roll_median  = QtGui.QRadioButton('Rolling Median', self)
-            self.rb_2_radio_group.addButton(self.rb_2_roll_median)
+            self.bottom_plot_buttons = QtGui.QButtonGroup()
+            self.bottom_open_button = QtGui.QPushButton('Open', self)
+            self.bottom_fname = self.bottom_open_button.clicked.connect(self.Open_File)
+            self.bottom_plot_buttons.addButton(self.bottom_open_button)
+            self.bottom_plot_button = QtGui.QPushButton('Plot', self)
+            #self.bottom_fname = self.bottom_open_button.clicked.connect(self.Open_File)
+            self.bottom_plot_buttons.addButton(self.bottom_plot_button)
+            self.bottom_clear_button = QtGui.QPushButton('Clear', self)
+            #self.bottom_fname = self.bottom_open_button.clicked.connect(self.Open_File)
+            self.bottom_plot_buttons.addButton(self.bottom_clear_button)
+            self.bottom_plot_input = QtGui.QButtonGroup()
+            self.bottom_units = QtGui.QPushButton('Input Units', self)
+            self.bottom_units.clicked.connect(self.openInputDialog)
+
+            #Defines combo boxes for bottom plot
+            self.bottom_plot_combo = QtGui.QButtonGroup()
+            self.bottom_xcombo = QtGui.QComboBox()
+            self.bottom_xcombo.addItems('X')
+            self.bottom_xcombo_lbl = QtGui.QLabel('X Values', self)
+            self.bottom_ycombo = QtGui.QComboBox()
+            self.bottom_ycombo.addItems('Y')
+            self.bottom_ycombo_lbl = QtGui.QLabel('Y Values', self)
             
-            #Creates Spinboxes
-            self.sb_2_neg_limit_text = QtGui.QLabel('Filter Lower Limit', self)
-            self.sb_2_neg_limit = QtGui.QDoubleSpinBox(self)
-            self.sb_2_neg_limit.setRange(-2047.5, 2047.5)
-            self.sb_2_neg_limit.setValue(-15)
- 
-            self.sb_2_pos_limit_text = QtGui.QLabel('Filter Upper Limit', self)
-            self.sb_2_pos_limit = QtGui.QDoubleSpinBox(self)
-            self.sb_2_pos_limit.setRange(-2047.5, 2047.5)
-            self.sb_2_pos_limit.setValue(15)
+
+            self.bottom_plot_layout.addWidget(self.bottom_plot_layout_text, 0,0,1,4)            
+            self.bottom_plot_layout.addWidget(self.bottom_open_button, 1,0)
+            self.bottom_plot_layout.addWidget(self.bottom_plot_button, 2,0)
+            self.bottom_plot_layout.addWidget(self.bottom_clear_button, 3,0)
+            self.bottom_plot_layout.addWidget(self.bottom_units, 4,0)
             
-            #Adds radio & Spinboxes to 1st pass box
-            self.second_pass_layout.addWidget(self.second_pass_layout_text, 0,0,1,4)
-            self.second_pass_layout.addWidget(self.rb_2_zero_median, 1,0)
-            self.second_pass_layout.addWidget(self.rb_2_linear_median, 2,0)
-            self.second_pass_layout.addWidget(self.rb_2_poly_median, 3,0)
-            self.second_pass_layout.addWidget(self.rb_2_roll_median, 4,0)
+            self.bottom_plot_layout.addWidget(self.bottom_xcombo_lbl, 1,1)            
+            self.bottom_plot_layout.addWidget(self.bottom_xcombo, 2,1)
+            self.bottom_plot_layout.addWidget(self.bottom_ycombo_lbl, 3,1)            
+            self.bottom_plot_layout.addWidget(self.bottom_ycombo, 4,1)
             
-            self.second_pass_layout.addWidget(self.sb_2_neg_limit_text, 1,1)
-            self.second_pass_layout.addWidget(self.sb_2_neg_limit, 2,1)
-            self.second_pass_layout.addWidget(self.sb_2_pos_limit_text, 3,1)
-            self.second_pass_layout.addWidget(self.sb_2_pos_limit, 4,1)
                         
                         
-        def plot_options(self):
+        def Plot_Function(self):
             
             '''
             Clears Matplotlib Widget Canvas
@@ -178,6 +247,7 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             sharex - shares x axis between subplots
             '''
+            #self.legend.remove()            
             
             #Adds a Matplotlib Toolbar to the display, clears the display and adds only the required buttons
             self.navi_toolbar = NavigationToolbar(self.mpl.canvas, self)
@@ -199,6 +269,10 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.toolbar_grid.addWidget(self.navi_toolbar)
             
+            #self.top_xval = self.top_data[self.top_data.dtype.names[self.top_xcombo.currentIndex()]]
+            #self.top_yval = self.top_data[self.top_data.dtype.names[self.top_ycombo.currentIndex()]]
+            #self.yval = self.yval - np.median(self.yval)            
+            
             x1 = np.linspace(0.0, 5.0)
             y1 = np.cos(2 * np.pi * x1) * np.exp(-x1)
             y2 = np.cos(3 * np.pi * x1) * np.exp(-x1)
@@ -206,7 +280,7 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.fig.clear()
             
             self.plot1 = self.mpl.canvas.fig.add_subplot(3,1,1)
-            self.plot1.plot(x1,y1)
+            #self.plot1.plot(self.top_xval,self.top_yval)
             
             self.plot2 = self.mpl.canvas.fig.add_subplot(3,1,2, sharex=self.plot1)
             self.plot2.plot(x1,y2)
@@ -233,7 +307,7 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #Button_layout is a QT desginer Grid Layout.
             
             self.keyboard_Definitions()
-            self.plot_options()
+            self.Plot_Function()
             self.button_grid()
             
             self.statusbar.setEnabled(True)
