@@ -8,6 +8,7 @@ from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 import itertools
 from pandas import *
+from matplotlib import lines
 
 
 # import the MainWindow widget from the converted .ui files
@@ -63,7 +64,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)                        
 '''
         def Plot_Function(self):
-            self.legend.remove()
+            #self.legend.remove()
             #Takes x and y values to plot from combo box selection
             self.xval = self.data[self.data.dtype.names[self.xcombo.currentIndex()]]
             self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]
@@ -71,39 +72,40 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             #Calculates stats info of y values
             self.stats() 
-            #Creates scatter plot
-            temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color='0.25', marker=next(self.markers))
-            self.mpl.canvas.ax.axis('auto')
-            #self.mpl.canvas.ax.set_xlim(xmin=np.min(self.x), xmax=(np.max(self.x)))
+            
+            temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color=self.marker_colour.currentText(),marker=self.marker_style.currentText())
+            self.handles.append(temp_scatter)
+            self.labels.append(self.data.dtype.names[self.ycombo.currentIndex()])
+            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
+            
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
             self.mpl.canvas.ax.set_autoscale_on(True)
             self.mpl.canvas.ax.autoscale_view(True,True,True)
             self.mpl.canvas.ax.set_xlabel(self.x_units.text(), size = 15)
             self.mpl.canvas.ax.set_ylabel(self.y_units.text(), size=15)
             self.mpl.canvas.ax.set_title(self.chart_title.text(), size=20)
-            #self.mpl.canvas.ax.set_ylabel(self.ytitle, size = 15)
-            #self.mpl.canvas.ax.set_title(self.title, size = 15)
-            self.handles.append(temp_scatter)
-            self.labels.append(self.data.dtype.names[self.ycombo.currentIndex()])
-            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
-            self.mpl.canvas.draw()
+            self.mpl.canvas.ax.axis('auto')
+            
+            #Creates scatter plot
 
+            self.mpl.canvas.draw()
+            
         
         def legend_definitions(self): #Handles legend
             self.handles = []
             self.labels = []
             
-            self.colors = itertools.cycle(["b","g","r","c","m","y","b"])
-            self.markers = itertools.cycle([".","D","p","*","+"])
+            #self.colors = itertools.cycle(["b","g","r","c","m","y","b"])
+            #self.markers = itertools.cycle([".","D","p","*","+"])
             
             self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
 
         def stats(self): #Calculates stats info of y values and sends back to UI
-            self.mean = str(np.mean(self.yval))
+            self.mean = str(np.round(np.mean(self.yval), decimals=3))
             self.mean_output.setText(self.mean)
-            self.median = str(np.median(self.yval))
+            self.median = str(np.round(np.median(self.yval), decimals=3))
             self.median_output.setText(self.median)
-            self.sd = str(np.std(self.yval))
+            self.sd = str(np.round(np.std(self.yval), decimals=3))
             self.sd_output.setText(self.sd)
  
         def moving_average_buttons(self): #Radio Button Helper
@@ -135,26 +137,26 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.TSS = np.sum(np.square(np.subtract(self.yval, np.mean(self.yval))))
 
             #Sends R-Squared value back to UI
-            self.r_squared = str(np.subtract(1, np.divide(self.RSS, self.TSS))) #send back to GUI
+            self.r_squared = str(np.round(np.subtract(1, np.divide(self.RSS, self.TSS)), decimals=3)) #send back to GUI
             self.r_squared_output.setText(self.r_squared) 
 
             #Sends trendline equation back to UI
-            coeff1 = self.p[0]
+            coeff1 = np.round(self.p[0], decimals=10)
             coeff1 = str(coeff1)
-            coeff2 = self.p[1]
+            coeff2 = np.round(self.p[1], decimals=8)
             coeff2 = str(coeff2)
             if self.order == 1:
                 self.fit_equation = coeff1+'x + '+coeff2
                 self.trendline_equation.setText(self.fit_equation) 
             if self.order == 2:
-                coeff3 = self.p[2]
+                coeff3 = np.round(self.p[2],decimals=3)
                 coeff3 = str(coeff3)
                 self.fit_equation = coeff1+'x^2 + '+coeff2+'x + '+coeff3
                 self.trendline_equation.setText(self.fit_equation)
             if self.order == 3:
-                coeff3 = self.p[2]
+                coeff3 = np.round(self.p[2],decimals=5)
                 coeff3 = str(coeff3)
-                coeff4 = self.p[3]
+                coeff4 = np.round(self.p[3],decimals=3)
                 coeff4 = str(coeff4)
                 self.fit_equation = coeff1+'x^3 + '+coeff2+'x^2 + '+coeff3+'x + '+coeff4
                 self.trendline_equation.setText(self.fit_equation)    
@@ -163,7 +165,13 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def plot_trendline(self): #Plots poly-line as solid line
             #self.polyfit()
             #poly_line = self.mpl.canvas.ax.plot(self.xval, self.poly_y, color="r")
-            trendline = self.mpl.canvas.ax.plot(self.xval, self.trend_y, next(self.colors))
+            self.color = self.line_colour.currentText()
+            print self.color
+            self.style = self.line_style.currentText()
+            print self.style
+            self.width = self.line_width.value()
+            print self.width
+            self.mpl.canvas.ax.plot(self.xval, self.trend_y, color=self.color, linestyle=self.style, linewidth=self.width)
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
             self.mpl.canvas.ax.set_autoscale_on(True)
             self.mpl.canvas.ax.autoscale_view(True,True,True)
@@ -172,11 +180,11 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.ax.set_title(self.chart_title.text(), size=20)
             #self.mpl.canvas.ax.set_ylabel(self.ytitle, size = 15)
             #self.mpl.canvas.ax.set_title(self.title, size = 15)
-            self.handles.append(trendline)
+            #self.handles.append(trendline)
             #self.handles.append(poly_line)
             #self.poly_order_title = self.poly_order.text()
             #self.labels.append(self.poly_order_title + ' Order Polynomial')
-            self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
+            #self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
             self.mpl.canvas.draw()
         
                               
@@ -189,6 +197,10 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.stats_layout = QtGui.QGridLayout()
             self.stats_box = QtGui.QGroupBox()
             self.stats_box.setLayout(self.stats_layout)
+
+            self.plot_layout = QtGui.QGridLayout()
+            self.plot_box = QtGui.QGroupBox()
+            self.plot_box.setLayout(self.plot_layout)
             
             #File Properties
             self.Grid_horizontal_Layout_2.addWidget(self.buttons_box, 1)
@@ -235,6 +247,43 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.buttons_layout.addWidget(self.x_units, 2,3)            
             self.buttons_layout.addWidget(self.y_units_lbl, 3,3)            
             self.buttons_layout.addWidget(self.y_units, 4,3)            
+
+
+            #Plotting Properties
+            self.Grid_horizontal_Layout_2.addWidget(self.plot_box, 1)
+            string = '<span style=" font-size:12pt;; font-weight:600;">Plot Settings</span>'       
+            self.plot_layout_text = QtGui.QLabel(string, self)
+            self.plot_buttons = QtGui.QButtonGroup()
+                        
+            self.marker_style = QtGui.QComboBox()
+            self.marker_style.addItems(('.', 'o', 'v', '^', '*', 'D', 'd'))
+            self.marker_style_lbl = QtGui.QLabel('Marker Style', self)
+            self.marker_colour = QtGui.QComboBox()
+            self.marker_colour.addItems(('0.25', '0.5', '0.75', 'k', 'b', 'g', 'r', 'c', 'y', 'm'))
+            self.marker_colour_lbl = QtGui.QLabel('Marker Colour', self)
+             
+            self.line_style = QtGui.QComboBox()
+            self.line_style.addItems(('_', '-', '--', ':'))
+            self.line_style_lbl = QtGui.QLabel('Line Style', self)
+            self.line_width = QtGui.QSpinBox()
+            self.line_width.setRange(1,10)
+            self.line_width_lbl = QtGui.QLabel('Line Width', self)
+            self.line_colour = QtGui.QComboBox()
+            self.line_colour.addItems(('0.25', '0.5', '0.75', 'k', 'b', 'g', 'r', 'c', 'y', 'm'))
+            self.line_colour_lbl = QtGui.QLabel('Line Colour', self)
+        
+            self.plot_layout.addWidget(self.plot_layout_text, 0,0,1,4)
+            self.plot_layout.addWidget(self.line_style_lbl, 1,0)
+            self.plot_layout.addWidget(self.line_style, 1,1)
+            self.plot_layout.addWidget(self.line_width_lbl, 2,0)
+            self.plot_layout.addWidget(self.line_width, 2,1)
+            self.plot_layout.addWidget(self.line_colour_lbl, 3,0)
+            self.plot_layout.addWidget(self.line_colour,3,1)              
+            self.plot_layout.addWidget(self.marker_style_lbl, 1,2)
+            self.plot_layout.addWidget(self.marker_style, 1,3)
+            self.plot_layout.addWidget(self.marker_colour_lbl, 2,2)
+            self.plot_layout.addWidget(self.marker_colour, 2,3)
+            
 
             #Stats Properties
             self.Grid_horizontal_Layout_2.addWidget(self.stats_box, 1)
@@ -293,6 +342,9 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.stats_layout.addWidget(self.trendline_equation, 5,1)
             self.stats_layout.addWidget(self.r_squared_lbl, 5,2)
             self.stats_layout.addWidget(self.r_squared_output, 5,3)
+
+
+            
                     
         def __init__(self, parent = None):
             # initialization of the superclass
