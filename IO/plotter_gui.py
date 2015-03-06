@@ -8,11 +8,9 @@ from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 import itertools
 from pandas import *
-from matplotlib import lines
-
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.GUI.plotter import Ui_MainWindow
 
 #import ArchaeoPY modules
 #import stats
@@ -79,12 +77,13 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
             
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
+            self.mpl.canvas.ax.set_xlim(xmin=np.min(self.xval), xmax=np.max(self.xval))            
             self.mpl.canvas.ax.set_autoscale_on(True)
             self.mpl.canvas.ax.autoscale_view(True,True,True)
             self.mpl.canvas.ax.set_xlabel(self.x_units.text(), size = 15)
             self.mpl.canvas.ax.set_ylabel(self.y_units.text(), size=15)
             self.mpl.canvas.ax.set_title(self.chart_title.text(), size=20)
-            self.mpl.canvas.ax.axis('auto')
+            #self.mpl.canvas.ax.axis('auto')
             
             #Creates scatter plot
 
@@ -163,15 +162,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
                 
         def plot_trendline(self): #Plots poly-line as solid line
-            #self.polyfit()
-            #poly_line = self.mpl.canvas.ax.plot(self.xval, self.poly_y, color="r")
-            self.color = self.line_colour.currentText()
-            print self.color
-            self.style = self.line_style.currentText()
-            print self.style
-            self.width = self.line_width.value()
-            print self.width
-            self.mpl.canvas.ax.plot(self.xval, self.trend_y, color=self.color, linestyle=self.style, linewidth=self.width)
+            self.mpl.canvas.ax.plot(self.xval, self.trend_y, color=self.line_colour.currentText(), linestyle=self.line_style.currentText(), linewidth=self.line_width.value())            
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
             self.mpl.canvas.ax.set_autoscale_on(True)
             self.mpl.canvas.ax.autoscale_view(True,True,True)
@@ -263,13 +254,13 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.marker_colour_lbl = QtGui.QLabel('Marker Colour', self)
              
             self.line_style = QtGui.QComboBox()
-            self.line_style.addItems(('_', '-', '--', ':'))
+            self.line_style.addItems(('-', '--', ':','_'))
             self.line_style_lbl = QtGui.QLabel('Line Style', self)
             self.line_width = QtGui.QSpinBox()
             self.line_width.setRange(1,10)
             self.line_width_lbl = QtGui.QLabel('Line Width', self)
             self.line_colour = QtGui.QComboBox()
-            self.line_colour.addItems(('0.25', '0.5', '0.75', 'k', 'b', 'g', 'r', 'c', 'y', 'm'))
+            self.line_colour.addItems(('r','b','g','c','y','m','0.25','0.5','0.75','k'))
             self.line_colour_lbl = QtGui.QLabel('Line Colour', self)
         
             self.plot_layout.addWidget(self.plot_layout_text, 0,0,1,4)
