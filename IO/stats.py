@@ -1,11 +1,6 @@
 import numpy as np
 
-def mean(array):
-    return np.mean(array[:,2])
-
-def median(array):
-    return np.median(array[:,2])
-
-def mode(array):
-    return np.mode(array[:,2])
+def poly_fit(x_points, y_points, poly_order):
+    p = np.polyfit(x_points, y_points, poly_order)
+    return (x, np.polyval(p, x_points))
     

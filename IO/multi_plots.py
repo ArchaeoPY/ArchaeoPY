@@ -40,17 +40,11 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 f.seek(0)
                 self.data = np.genfromtxt(f, names=True, delimiter='	',dtype=None,filling_values = np.nan, usecols=(range(0,num_cols)))
 
-            #Defines x and y values
-            self.x = self.data.dtype.names
-            self.y = self.data.dtype.names
-            #Populates combo boxes with header names
-            self.xcombo.clear()
-            self.xcombo.addItems(self.x)
-            self.ycombo.clear()
-            self.ycombo.addItems(self.y)
+            self.open_handler()            
+
+          
+
             
-            #Clears Legend
-            self.legend_definitions()
             
         '''
         def Save_Stats(self):
@@ -59,8 +53,9 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             fname = QtGui.QFileDialog.getSaveFileName(self, 'Save File', 
                '*.csv')            
             output_text = np.column_stack((self.x,self.y))
-            np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)                        
-'''
+            np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)'''
+                        
+
         def Plot_Function(self):
             #self.legend.remove()
             #Takes x and y values to plot from combo box selection
@@ -181,67 +176,167 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
                               
         def button_grid(self): #Defines button and layout 
             #self.firstrun=True
-            self.buttons_layout = QtGui.QGridLayout()
-            self.buttons_box = QtGui.QGroupBox()
-            self.buttons_box.setLayout(self.buttons_layout)
-            
-            self.stats_layout = QtGui.QGridLayout()
-            self.stats_box = QtGui.QGroupBox()
-            self.stats_box.setLayout(self.stats_layout)
+            self.plot1_layout = QtGui.QGridLayout()
+            self.plot1_box = QtGui.QGroupBox()
+            self.plot1_box.setLayout(self.plot1_layout)
 
-            self.plot_layout = QtGui.QGridLayout()
-            self.plot_box = QtGui.QGroupBox()
-            self.plot_box.setLayout(self.plot_layout)
+            self.plot2_layout = QtGui.QGridLayout()
+            self.plot2_box = QtGui.QGroupBox()
+            self.plot2_box.setLayout(self.plot2_layout)
+
+            self.plot3_layout = QtGui.QGridLayout()
+            self.plot3_box = QtGui.QGroupBox()
+            self.plot3_box.setLayout(self.plot3_layout)
             
-            #File Properties
-            self.Grid_horizontal_Layout_2.addWidget(self.buttons_box, 1)
-            string = '<span style=" font-size:12pt;; font-weight:600;">File Settings</span>'       
-            self.buttons_layout_text = QtGui.QLabel(string, self)             
+            #self.stats_layout = QtGui.QGridLayout()
+            #self.stats_box = QtGui.QGroupBox()
+            #self.stats_box.setLayout(self.stats_layout)
+
+            #self.plot_layout = QtGui.QGridLayout()
+            #self.plot_box = QtGui.QGroupBox()
+            #self.plot_box.setLayout(self.plot_layout)
             
-            self.buttons = QtGui.QButtonGroup()            
-            self.open_button = QtGui.QPushButton('Open', self)
-            self.buttons.addButton(self.open_button)
-            self.open_button.clicked.connect(self.Open_File)
+            #Plot 1
+            self.Grid_horizontal_Layout_2.addWidget(self.plot1_box, 1)
+            string = '<span style=" font-size:12pt;; font-weight:600;">Plot 1</span>'       
+            self.plot1_layout_text = QtGui.QLabel(string, self)             
+            
+            self.plot1_buttons = QtGui.QButtonGroup()            
+            self.open1_button = QtGui.QPushButton('Open', self)
+            self.plot1_buttons.addButton(self.open1_button)
+            self.open1_button.clicked.connect(self.Open_File)
             self.plot_button = QtGui.QPushButton('Plot', self)
-            self.buttons.addButton(self.plot_button)
+            self.plot1_buttons.addButton(self.plot_button)
             self.plot_button.clicked.connect(self.Plot_Function)
             self.clear_button = QtGui.QPushButton('Clear', self)
-            self.buttons.addButton(self.clear_button)
+            self.plot1_buttons.addButton(self.clear_button)
             self.clear_button.clicked.connect(self.ClearPlot)
             self.chart_title = QtGui.QLineEdit(self)
             self.chart_title.setText("Enter Chart Title")
             
-            self.xcombo = QtGui.QComboBox()
-            self.xcombo.addItems('X')
-            self.x_lbl = QtGui.QLabel('X Values --')          
+            self.x1combo = QtGui.QComboBox()
+            self.x1combo.addItems('X')
+            self.x1_lbl = QtGui.QLabel('X Values --')          
             
-            self.ycombo = QtGui.QComboBox()
-            self.ycombo.addItems('Y')
-            self.y_lbl = QtGui.QLabel('Y values --')
+            self.y1combo = QtGui.QComboBox()
+            self.y1combo.addItems('Y')
+            self.y1_lbl = QtGui.QLabel('Y values --')
 
-            self.x_units = QtGui.QLineEdit(self)
-            self.x_units_lbl = QtGui.QLabel("Input X Units:", self)
+            self.x1_units = QtGui.QLineEdit(self)
+            self.x1_units_lbl = QtGui.QLabel("Input X Units:", self)
             #self.connect(self.inputDlgBtn, QtCore.SIGNAL("clicked()"), self.openInputDialog)
-            self.y_units = QtGui.QLineEdit(self)
-            self.y_units_lbl = QtGui.QLabel("Input Y Units:", self)
+            self.y1_units = QtGui.QLineEdit(self)
+            self.y1_units_lbl = QtGui.QLabel("Input Y Units:", self)
 
-            self.buttons_layout.addWidget(self.buttons_layout_text, 0,0,1,4)                      
-            self.buttons_layout.addWidget(self.open_button, 1,0)
-            self.buttons_layout.addWidget(self.plot_button, 2,0)
-            self.buttons_layout.addWidget(self.clear_button, 3,0)
-            self.buttons_layout.addWidget(self.chart_title, 4,0)
-            self.buttons_layout.addWidget(self.x_lbl, 1,1)
-            self.buttons_layout.addWidget(self.xcombo, 2,1)
-            self.buttons_layout.addWidget(self.y_lbl, 3,1)
-            self.buttons_layout.addWidget(self.ycombo, 4,1)
-            self.buttons_layout.addWidget(self.x_units_lbl, 1,3)
-            self.buttons_layout.addWidget(self.x_units, 2,3)            
-            self.buttons_layout.addWidget(self.y_units_lbl, 3,3)            
-            self.buttons_layout.addWidget(self.y_units, 4,3)            
+            self.plot1_layout.addWidget(self.plot1_layout_text, 0,0,1,4)                      
+            self.plot1_layout.addWidget(self.open_button, 1,0)
+            self.plot1_layout.addWidget(self.plot_button, 2,0)
+            self.plot1_layout.addWidget(self.clear_button, 3,0)
+            self.plot1_layout.addWidget(self.chart_title, 4,0)
+            self.plot1_layout.addWidget(self.x1_lbl, 1,1)
+            self.plot1_layout.addWidget(self.x1combo, 2,1)
+            self.plot1_layout.addWidget(self.y1_lbl, 3,1)
+            self.plot1_layout.addWidget(self.y1combo, 4,1)
+            self.plot1_layout.addWidget(self.x1_units_lbl, 1,3)
+            self.plot1_layout.addWidget(self.x1_units, 2,3)            
+            self.plot1_layout.addWidget(self.y1_units_lbl, 3,3)            
+            self.plot1_layout.addWidget(self.y1_units, 4,3)
 
+
+            #Plot 2
+            self.Grid_horizontal_Layout_2.addWidget(self.plot2_box, 1)
+            string = '<span style=" font-size:12pt;; font-weight:600;">Plot 2</span>'       
+            self.plot2_layout_text = QtGui.QLabel(string, self)             
+            
+            self.plot2_buttons = QtGui.QButtonGroup()            
+            self.open2_button = QtGui.QPushButton('Open', self)
+            self.plot2_buttons.addButton(self.open_button)
+            self.open2_button.clicked.connect(self.Open_File)
+            self.plot2_button = QtGui.QPushButton('Plot', self)
+            self.plot2_buttons.addButton(self.plot2_button)
+            self.plot2_button.clicked.connect(self.Plot_Function)
+            self.clear2_button = QtGui.QPushButton('Clear', self)
+            self.plot2_buttons.addButton(self.clear2_button)
+            self.clear2_button.clicked.connect(self.ClearPlot)
+            self.chart_title2 = QtGui.QLineEdit(self)
+            self.chart_title2.setText("Enter Chart Title")
+            
+            self.x2combo = QtGui.QComboBox()
+            self.x2combo.addItems('X')
+            self.x2_lbl = QtGui.QLabel('X Values --')          
+            
+            self.y2combo = QtGui.QComboBox()
+            self.y2combo.addItems('Y')
+            self.y2_lbl = QtGui.QLabel('Y values --')
+
+            self.x2_units = QtGui.QLineEdit(self)
+            self.x2_units_lbl = QtGui.QLabel("Input X Units:", self)
+            #self.connect(self.inputDlgBtn, QtCore.SIGNAL("clicked()"), self.openInputDialog)
+            self.y2_units = QtGui.QLineEdit(self)
+            self.y2_units_lbl = QtGui.QLabel("Input Y Units:", self)
+
+            self.plot2_layout.addWidget(self.plot2_layout_text, 0,0,1,4)                      
+            self.plot2_layout.addWidget(self.open2_button, 1,0)
+            self.plot2_layout.addWidget(self.plot2_button, 2,0)
+            self.plot2_layout.addWidget(self.clear2_button, 3,0)
+            self.plot2_layout.addWidget(self.chart_title2, 4,0)
+            self.plot2_layout.addWidget(self.x2_lbl, 1,1)
+            self.plot2_layout.addWidget(self.x2combo, 2,1)
+            self.plot2_layout.addWidget(self.y2_lbl, 3,1)
+            self.plot2_layout.addWidget(self.y2combo, 4,1)
+            self.plot2_layout.addWidget(self.x2_units_lbl, 1,3)
+            self.plot2_layout.addWidget(self.x2_units, 2,3)            
+            self.plot2_layout.addWidget(self.y2_units_lbl, 3,3)            
+            self.plot2_layout.addWidget(self.y2_units, 4,3)
+
+            #Plot 3
+            self.Grid_horizontal_Layout_2.addWidget(self.plot3_box, 1)
+            string = '<span style=" font-size:12pt;; font-weight:600;">Plot 3</span>'       
+            self.plot3_layout_text = QtGui.QLabel(string, self)             
+            
+            self.plot3_buttons = QtGui.QButtonGroup()            
+            self.open3_button = QtGui.QPushButton('Open', self)
+            self.plot3_buttons.addButton(self.open_button)
+            self.open3_button.clicked.connect(self.Open_File)
+            self.plot3_button = QtGui.QPushButton('Plot', self)
+            self.plot3_buttons.addButton(self.plot3_button)
+            self.plot3_button.clicked.connect(self.Plot_Function)
+            self.clear3_button = QtGui.QPushButton('Clear', self)
+            self.plot3_buttons.addButton(self.clear3_button)
+            self.clear3_button.clicked.connect(self.ClearPlot)
+            self.chart_title3 = QtGui.QLineEdit(self)
+            self.chart_title3.setText("Enter Chart Title")
+            
+            self.x3combo = QtGui.QComboBox()
+            self.x3combo.addItems('X')
+            self.x3_lbl = QtGui.QLabel('X Values --')          
+            
+            self.y3combo = QtGui.QComboBox()
+            self.y3combo.addItems('Y')
+            self.y3_lbl = QtGui.QLabel('Y values --')
+
+            self.x3_units = QtGui.QLineEdit(self)
+            self.x3_units_lbl = QtGui.QLabel("Input X Units:", self)
+            #self.connect(self.inputDlgBtn, QtCore.SIGNAL("clicked()"), self.openInputDialog)
+            self.y3_units = QtGui.QLineEdit(self)
+            self.y3_units_lbl = QtGui.QLabel("Input Y Units:", self)
+
+            self.plot3_layout.addWidget(self.plot3_layout_text, 0,0,1,4)                      
+            self.plot3_layout.addWidget(self.open3_button, 1,0)
+            self.plot3_layout.addWidget(self.plot3_button, 2,0)
+            self.plot3_layout.addWidget(self.clear3_button, 3,0)
+            self.plot3_layout.addWidget(self.chart_title3, 4,0)
+            self.plot3_layout.addWidget(self.x3_lbl, 1,1)
+            self.plot3_layout.addWidget(self.x3combo, 2,1)
+            self.plot3_layout.addWidget(self.y3_lbl, 3,1)
+            self.plot3_layout.addWidget(self.y3combo, 4,1)
+            self.plot3_layout.addWidget(self.x3_units_lbl, 1,3)
+            self.plot3_layout.addWidget(self.x3_units, 2,3)            
+            self.plot3_layout.addWidget(self.y3_units_lbl, 3,3)            
+            self.plot3_layout.addWidget(self.y3_units, 4,3)
 
             #Plotting Properties
-            self.Grid_horizontal_Layout_2.addWidget(self.plot_box, 1)
+            '''self.Grid_horizontal_Layout_2.addWidget(self.plot_box, 1)
             string = '<span style=" font-size:12pt;; font-weight:600;">Plot Settings</span>'       
             self.plot_layout_text = QtGui.QLabel(string, self)
             self.plot_buttons = QtGui.QButtonGroup()
@@ -332,8 +427,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.stats_layout.addWidget(self.trendline_lbl, 5,0)
             self.stats_layout.addWidget(self.trendline_equation, 5,1)
             self.stats_layout.addWidget(self.r_squared_lbl, 5,2)
-            self.stats_layout.addWidget(self.r_squared_output, 5,3)
-
+            self.stats_layout.addWidget(self.r_squared_output, 5,3)'''
 
             
                     
