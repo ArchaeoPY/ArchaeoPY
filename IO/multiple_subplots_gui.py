@@ -269,9 +269,9 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.toolbar_grid.addWidget(self.navi_toolbar)
             
-            #self.top_xval = self.top_data[self.top_data.dtype.names[self.top_xcombo.currentIndex()]]
-            #self.top_yval = self.top_data[self.top_data.dtype.names[self.top_ycombo.currentIndex()]]
-            #self.yval = self.yval - np.median(self.yval)            
+            self.top_xval = self.top_data[self.top_data.dtype.names[self.top_xcombo.currentIndex()]]
+            self.top_yval = self.top_data[self.top_data.dtype.names[self.top_ycombo.currentIndex()]]
+            self.yval = self.yval - np.median(self.yval)            
             
             x1 = np.linspace(0.0, 5.0)
             y1 = np.cos(2 * np.pi * x1) * np.exp(-x1)
