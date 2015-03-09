@@ -8,11 +8,11 @@ import matplotlib.mlab as mlab
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.GUI_Templates.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from geoplot import Load_Comp
-from xy import comp2dxf
+from open_binary import Load_Comp
+from comp_dxf import comp2dxf
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 

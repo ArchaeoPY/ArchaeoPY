@@ -8,11 +8,11 @@ import matplotlib.mlab as mlab
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.GUI_Templates.mpl import Ui_MainWindow
 
 #import geoplot load module
-from geoplot import Load_Comp
-from geophysical_processing import median_filter
+from open_binary import Load_Comp
+from ArchaeoPY.Processing.geophysical_processing import median_filter
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 

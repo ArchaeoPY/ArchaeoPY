@@ -8,10 +8,10 @@ from skimage import img_as_float, io
 
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.GUI_Templates.mpl import Ui_MainWindow
 
 #import ArchaeoPY modules
-from scikit_functions import adapteq
+from ArchaeoPY.Processing.scikit_functions import adapteq
 
 class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 

@@ -10,7 +10,7 @@ import itertools
 from pandas import *
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.plotter import Ui_MainWindow
+from ArchaeoPY.GUI_Templates.plotter import Ui_MainWindow
 
 #import ArchaeoPY modules
 #import stats
