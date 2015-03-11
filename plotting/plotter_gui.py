@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.ma as ma
 import sys
 #from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -62,7 +63,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             np.savetxt(str(fname),output_text,fmt ='%1.2f',delimiter=',', header = self.header)                        
 '''
         def Plot_Function(self):
-            #self.legend.remove()
+            self.legend.remove()
             #Takes x and y values to plot from combo box selection
             self.xval = self.data[self.data.dtype.names[self.xcombo.currentIndex()]]
             self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]
@@ -100,6 +101,10 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
 
         def stats(self): #Calculates stats info of y values and sends back to UI
+            self.min = str(np.round(np.min(self.yval), decimals=3))
+            self.min_output.setText(self.min)            
+            self.max = str(np.round(np.max(self.yval), decimals=3))
+            self.max_output.setText(self.max)   
             self.mean = str(np.round(np.mean(self.yval), decimals=3))
             self.mean_output.setText(self.mean)
             self.median = str(np.round(np.median(self.yval), decimals=3))
@@ -124,12 +129,27 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
                             
         def polyfit(self): #Calculates Polynomial Fit with Error Estimation
             #Calculate Poly Fit            
-            self.order = self.poly_order.value()            
+            self.order = self.poly_order.value()
+
             self.p = np.polyfit(self.xval, self.yval, self.order)  #coefficients
-            print self.order
             self.trend_y = np.polyval(self.p, self.xval) #fit values
             self.plot_trendline()
             
+            '''if self.data_trend.isChecked():
+                self.p = np.polyfit(self.xval, self.yval, self.order)  #coefficients
+                self.trend_y = np.polyval(self.p, self.xval) #fit values
+                self.plot_trendline()
+            
+            if self.avg_trend.isChecked():
+                self.rm_y= rolling_mean(self.yval, self.moving_avg_window.value())
+                self.rm_y = np.ma.masked_invalid(self.rm_y)
+                print np.shape(self.rm_y)
+                print self.rm_y
+                print np.shape(self.xval)
+                self.p = np.polyfit(self.xval, self.rm_y, self.order)  #coefficients
+                self.trend_y = np.polyval(self.p, self.xval) #fit values
+                self.plot_trendline()'''
+                 
             #Calculate coeffecient of determination            
             self.residuals = np.subtract(self.yval, self.trend_y) #residuals
             self.RSS = np.sum(np.square(self.residuals)) #residual sum of squares
@@ -281,18 +301,26 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             string = '<span style=" font-size:12pt;; font-weight:600;">Stats Settings</span>'       
             self.stats_layout_text = QtGui.QLabel(string, self)
             
-            self.mean_output_lbl = QtGui.QLabel("Data Mean")            
+            self.min_output_lbl = QtGui.QLabel("Data Min:")
+            self.min_output = QtGui.QLineEdit(self)
+
+            self.max_output_lbl = QtGui.QLabel("Data Max:")
+            self.max_output = QtGui.QLineEdit(self)            
+            
+            self.mean_output_lbl = QtGui.QLabel("Data Mean:")            
             self.mean_output = QtGui.QLineEdit(self)
             
-            self.median_output_lbl = QtGui.QLabel("Data Median")
+            self.median_output_lbl = QtGui.QLabel("Data Median:")
             self.median_output = QtGui.QLineEdit(self)
             
-            self.sd_lbl = QtGui.QLabel("Std Deviation")
+            self.sd_lbl = QtGui.QLabel("Std Deviation:")
             self.sd_output = QtGui.QLineEdit(self)
            
             self.stats_buttons = QtGui.QButtonGroup()            
-            self.poly_label = QtGui.QLabel('Poly Fit')            
-            #self.poly_fit = QtGui.QRadioButton('Poly Fit', self)            
+            self.poly_label = QtGui.QLabel('Poly Fit:')            
+            #self.poly_fit = QtGui.QRadioButton('Poly Fit', self) 
+            self.data_trend = QtGui.QRadioButton('Of Data:', self)
+            self.avg_trend = QtGui.QRadioButton('Of Moving Avg:', self)         
             self.poly_order_text = QtGui.QLabel('Order', self)
             self.poly_order = QtGui.QSpinBox(self)
             self.poly_order.setRange(1, 10)  
@@ -314,16 +342,22 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.r_squared_output = QtGui.QLineEdit(self)
             
             self.stats_layout.addWidget(self.stats_layout_text, 0,0,1,4)
-            self.stats_layout.addWidget(self.mean_output_lbl, 1,0)
-            self.stats_layout.addWidget(self.mean_output, 1,1)
-            self.stats_layout.addWidget(self.median_output_lbl, 1,2)
-            self.stats_layout.addWidget(self.median_output, 1,3)
-            self.stats_layout.addWidget(self.sd_lbl, 1,4)
-            self.stats_layout.addWidget(self.sd_output, 1,5)            
+            self.stats_layout.addWidget(self.min_output_lbl, 1,0)
+            self.stats_layout.addWidget(self.min_output, 1,1)
+            self.stats_layout.addWidget(self.max_output_lbl, 1,2)
+            self.stats_layout.addWidget(self.max_output, 1,3)
+            self.stats_layout.addWidget(self.mean_output_lbl, 1,4)
+            self.stats_layout.addWidget(self.mean_output, 1,5)
+            self.stats_layout.addWidget(self.median_output_lbl, 1,6)
+            self.stats_layout.addWidget(self.median_output, 1,7)
+            self.stats_layout.addWidget(self.sd_lbl, 1,8)
+            self.stats_layout.addWidget(self.sd_output, 1,9)            
             self.stats_layout.addWidget(self.poly_label, 2,0)
-            self.stats_layout.addWidget(self.poly_order_text, 2,1)
-            self.stats_layout.addWidget(self.poly_order, 2,2)
-            self.stats_layout.addWidget(self.poly_plot_button,2,3)
+            self.stats_layout.addWidget(self.data_trend, 2,1)
+            self.stats_layout.addWidget(self.avg_trend, 2,2)
+            self.stats_layout.addWidget(self.poly_order_text, 2,3)
+            self.stats_layout.addWidget(self.poly_order, 2,4)
+            self.stats_layout.addWidget(self.poly_plot_button,2,5)
             self.stats_layout.addWidget(self.rolling_mean_radio, 3,0)
             self.stats_layout.addWidget(self.rolling_median_radio, 3,1)
             self.stats_layout.addWidget(self.moving_avg_window_text,3,2)

@@ -5,10 +5,11 @@ Created on Wed Dec 10 16:44:27 2014
 @author: FPopecarter
 """
 import numpy as np
+import matplotlib.pyplot as plt
 HILO = 'LO' 
 grid = '06'
 
-fname = 'E:/MENSTON/MenLo6.csv'
+fname = 'lister_vcp.csv'
 array = np.genfromtxt(fname, dtype=float, delimiter=',', skiprows=1, filling_values=np.nan)
 
 #Assume y is collumn 2
@@ -42,20 +43,26 @@ i=0
 # need 'un' hardcoding
 # first position, last position, number of readings
 
-xstart = 0.25
-xstop = 19.75
-xreadings = 40
+xstart = 0
+xstop = 49
+xreadings = 50
 
 ystart = 0.125
-ystop = 19.875
-yreadings = 80
+ystop = 59.875
+yreadings = 240
 
 geoplotx = np.linspace(xstart,xstop,xreadings)
 geoploty = np.linspace(ystart,ystop,yreadings)
 
+array_size = np.empty([len(geoplotx), len(geoploty)])
+
+print np.shape(array_size)
+
 # prepopulates an empty numpy array to be filled with interpolated data
 new_len = len(geoplotx)*len(geoploty)
 out_array = np.empty((new_len,8))
+
+print np.shape(out_array)
 
 for start_x,stop_x in zip(start,stop):
     if i == xreadings:
@@ -71,19 +78,21 @@ for start_x,stop_x in zip(start,stop):
     for collumn in out_array[:,2:].T:
         #print j
         if i % 2 == 0:
-            print j
+            #print j
             #print len(y[start_x:stop_x]), len(array[j,start_x:stop_x])
-            collumn = np.interp(geoploty,y[start_x:stop_x],array[start_x:stop_x,j])
+            collumn = np.interp(geoploty,y[start_x:stop_x],array[start_x:stop_x,j], right=np.nan, left=np.nan)
             #print geoploty
             #print y[start_x:stop_x]
             #print array[start_x:stop_x,j]
             #print collumn
         else:
-            collumn = np.interp(geoploty,y[start_x:stop_x][::-1],array[start_x:stop_x,j][::-1])[::-1]
+            collumn = np.interp(geoploty,y[start_x:stop_x][::-1],array[start_x:stop_x,j][::-1], right=np.nan, left=np.nan)[::-1]
         out_array[yreadings*i:yreadings*(i+1),j] = collumn
         j+=1              
     i+=1
-np.savetxt(fname+'gridded.csv',out_array,delimiter=',')
+np.savetxt(fname+'rubberbanded.csv',out_array,delimiter=',')
+
+
 
 fname_out = fname.split('.')[0]
 for collumn, level in zip(out_array[:,2:].T,('c1','i1','c2','i2','c3','i3')):
@@ -93,5 +102,18 @@ for collumn, level in zip(out_array[:,2:].T,('c1','i1','c2','i2','c3','i3')):
             z[yreadings*i:yreadings*(i+1)] = z[yreadings*i:yreadings*(i+1)][::-1]
     print HILO + level + '_' + str(grid) +'.DAT'
     np.savetxt(HILO + level + '_' + str(grid) +'.DAT',z)    
-    
+    #regrid = np.reshape(z, array_size)
+    newz = z.reshape((len(geoplotx),len(geoploty)))
+    np.savetxt('regridded'+HILO + level + '_' + str(grid) +'.txt',newz,delimiter='    ')
+    neg_plt = np.median(z)-np.nanstd(z)
+    print np.nanstd(z)
+    print np.median(z)
+    pos_plt = np.median(z)+np.nanstd(z)
+    im = plt.imshow(newz, vmin=neg_plt, vmax=pos_plt, origin='upper', cmap=plt.cm.Greys,extent=(xstart,xstop,ystart,ystop))
+    plt.colorbar()
+     
+    #plt.scatter(out_x,out_y)
+    print 'image created'
+    # print line
+    plt.show(block=True)
     
