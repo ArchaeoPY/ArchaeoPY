@@ -10,7 +10,7 @@ import itertools
 
 
 # import the MainWindow widget from the converted .ui files
-from ArchaeoPY.GUI.mpl import Ui_MainWindow
+from ArchaeoPY.GUI_Templates.mpl import Ui_MainWindow
 
 class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
@@ -307,7 +307,7 @@ class TraverseMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #Button_layout is a QT desginer Grid Layout.
             
             self.keyboard_Definitions()
-            self.Plot_Function()
+            #self.Plot_Function()
             self.button_grid()
             
             self.statusbar.setEnabled(True)

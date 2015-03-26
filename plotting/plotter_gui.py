@@ -9,6 +9,8 @@ from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
 import itertools
 from pandas import *
+import scipy.signal
+#import seaborn as sns
 
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI_Templates.plotter import Ui_MainWindow
@@ -37,12 +39,14 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.fname = QtGui.QFileDialog.getOpenFileName()
             #Opes File
             with open(self.fname, 'r') as f:
-                num_cols = len(f.readline().split('	'))-1
+                num_cols = len(f.readline().split(','))
                 f.seek(0)
-                self.data = np.genfromtxt(f, names=True, delimiter='	',dtype=None,filling_values = np.nan, usecols=(range(0,num_cols)))
+                self.data = np.genfromtxt(f, names=True, delimiter=',',dtype=None,filling_values = np.nan, usecols=(range(0,num_cols)))
 
+                print self.data
             #Defines x and y values
             self.x = self.data.dtype.names
+            print self.x
             self.y = self.data.dtype.names
             #Populates combo boxes with header names
             self.xcombo.clear()
@@ -72,7 +76,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             #Calculates stats info of y values
             self.stats() 
             
-            temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color=self.marker_colour.currentText(),marker=self.marker_style.currentText())
+            temp_scatter = self.mpl.canvas.ax.scatter(self.xval,self.yval, color=self.marker_colour.currentText(),marker=self.marker_style.currentText(), s=self.marker_size.value())
             self.handles.append(temp_scatter)
             self.labels.append(self.data.dtype.names[self.ycombo.currentIndex()])
             self.legend = self.mpl.canvas.fig.legend(self.handles,self.labels,'upper right')
@@ -125,13 +129,28 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
         def moving_median(self):
             self.trend_y = rolling_median(self.yval, self.moving_avg_window.value())
             self.plot_trendline()
-
-                            
+        
+        def savgol_filter(self):
+            self.trend_y = scipy.signal.savgol_filter(self.yval, self.savgol_window.value(), self.savgol_order.value())
+            self.plot_trendline()
+            
+        def fit_manager(self):
+            if self.data_trend.isChecked():
+                self.fit_y = self.yval
+                print self.fit_y
+                self.polyfit()
+                print 'Data!'
+            elif self.savgol_trend.isChecked():
+                self.fit_y = self.trend_y = scipy.signal.savgol_filter(self.yval, self.savgol_window.value(), self.savgol_order.value())
+                print self.fit_y                
+                self.polyfit()
+                print 'Savgol!'
+        
         def polyfit(self): #Calculates Polynomial Fit with Error Estimation
             #Calculate Poly Fit            
             self.order = self.poly_order.value()
 
-            self.p = np.polyfit(self.xval, self.yval, self.order)  #coefficients
+            self.p = np.polyfit(self.xval, self.fit_y, self.order)  #coefficients
             self.trend_y = np.polyval(self.p, self.xval) #fit values
             self.plot_trendline()
             
@@ -173,14 +192,22 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 self.fit_equation = coeff1+'x^2 + '+coeff2+'x + '+coeff3
                 self.trendline_equation.setText(self.fit_equation)
             if self.order == 3:
-                coeff3 = np.round(self.p[2],decimals=5)
+                coeff3 = np.round(self.p[2],decimals=10)
                 coeff3 = str(coeff3)
                 coeff4 = np.round(self.p[3],decimals=3)
                 coeff4 = str(coeff4)
                 self.fit_equation = coeff1+'x^3 + '+coeff2+'x^2 + '+coeff3+'x + '+coeff4
                 self.trendline_equation.setText(self.fit_equation)    
             
-                
+        def plot_histogram(self):
+            self.ClearPlot()
+            self.yval = self.data[self.data.dtype.names[self.ycombo.currentIndex()]]          
+            self.mpl.canvas.ax.hist(self.yval, self.bins.value())
+            self.mpl.canvas.ax.set_xlabel('Value - mS/m', size = 15)
+            self.mpl.canvas.ax.set_ylabel('Frequency', size=15)
+            self.mpl.canvas.ax.set_title(self.chart_title.text()+' Histogram. Bins = '+str(self.bins.value()), size=20)            
+            self.mpl.canvas.draw()
+        
         def plot_trendline(self): #Plots poly-line as solid line
             self.mpl.canvas.ax.plot(self.xval, self.trend_y, color=self.line_colour.currentText(), linestyle=self.line_style.currentText(), linewidth=self.line_width.value())            
             self.mpl.canvas.ax.set_ylim(ymin=np.min(self.yval), ymax=(np.max(self.yval)))
@@ -213,9 +240,13 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.plot_box = QtGui.QGroupBox()
             self.plot_box.setLayout(self.plot_layout)
             
+            self.curvefit_layout = QtGui.QGridLayout()
+            self.curvefit_box = QtGui.QGroupBox()
+            self.curvefit_box.setLayout(self.curvefit_layout)
+            
             #File Properties
             self.Grid_horizontal_Layout_2.addWidget(self.buttons_box, 1)
-            string = '<span style=" font-size:12pt;; font-weight:600;">File Settings</span>'       
+            string = '<span style=" font-size:10pt;; font-weight:600;">File Settings</span>'       
             self.buttons_layout_text = QtGui.QLabel(string, self)             
             
             self.buttons = QtGui.QButtonGroup()            
@@ -262,7 +293,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
             #Plotting Properties
             self.Grid_horizontal_Layout_2.addWidget(self.plot_box, 1)
-            string = '<span style=" font-size:12pt;; font-weight:600;">Plot Settings</span>'       
+            string = '<span style=" font-size:10pt;; font-weight:600;">Plot Settings</span>'       
             self.plot_layout_text = QtGui.QLabel(string, self)
             self.plot_buttons = QtGui.QButtonGroup()
                         
@@ -270,6 +301,10 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.marker_style.addItems(('.', 'o', 'v', '^', '*', 'D', 'd'))
             self.marker_style_lbl = QtGui.QLabel('Marker Style', self)
             self.marker_colour = QtGui.QComboBox()
+            self.marker_size_lbl = QtGui.QLabel('Marker Size', self)
+            self.marker_size = QtGui.QSpinBox()
+            self.marker_size.setRange(1, 1000)
+            self.marker_size.setValue(30)
             self.marker_colour.addItems(('0.25', '0.5', '0.75', 'k', 'b', 'g', 'r', 'c', 'y', 'm'))
             self.marker_colour_lbl = QtGui.QLabel('Marker Colour', self)
              
@@ -282,23 +317,90 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.line_colour = QtGui.QComboBox()
             self.line_colour.addItems(('r','b','g','c','y','m','0.25','0.5','0.75','k'))
             self.line_colour_lbl = QtGui.QLabel('Line Colour', self)
-        
-            self.plot_layout.addWidget(self.plot_layout_text, 0,0,1,4)
+                    
+            self.plot_layout.addWidget(self.plot_layout_text, 0,0,1,2)
             self.plot_layout.addWidget(self.line_style_lbl, 1,0)
             self.plot_layout.addWidget(self.line_style, 1,1)
             self.plot_layout.addWidget(self.line_width_lbl, 2,0)
             self.plot_layout.addWidget(self.line_width, 2,1)
             self.plot_layout.addWidget(self.line_colour_lbl, 3,0)
             self.plot_layout.addWidget(self.line_colour,3,1)              
-            self.plot_layout.addWidget(self.marker_style_lbl, 1,2)
-            self.plot_layout.addWidget(self.marker_style, 1,3)
-            self.plot_layout.addWidget(self.marker_colour_lbl, 2,2)
-            self.plot_layout.addWidget(self.marker_colour, 2,3)
+            self.plot_layout.addWidget(self.marker_style_lbl, 4,0)
+            self.plot_layout.addWidget(self.marker_style, 4,1)
+            self.plot_layout.addWidget(self.marker_size_lbl, 5,0)
+            self.plot_layout.addWidget(self.marker_size, 5,1)
+            self.plot_layout.addWidget(self.marker_colour_lbl, 6,0)
+            self.plot_layout.addWidget(self.marker_colour, 6,1)
+
+
+            self.Grid_horizontal_Layout_2.addWidget(self.curvefit_box, 1)
+            string = '<span style=" font-size:10pt;; font-weight:600;">Filtering/Fitting Settings</span>'       
+            self.curvefit_layout_text = QtGui.QLabel(string, self)
+            self.curvefit_buttons = QtGui.QButtonGroup()
             
+            self.curvefit_buttons = QtGui.QButtonGroup()            
+            self.poly_label = QtGui.QLabel('Poly Fit:')            
+            #self.poly_fit = QtGui.QRadioButton('Poly Fit', self) 
+            self.data_trend = QtGui.QRadioButton('Of Data:', self)
+            self.savgol_trend = QtGui.QRadioButton('Filtered Data:', self)         
+            self.poly_order_text = QtGui.QLabel('Order', self)
+            self.poly_order = QtGui.QSpinBox(self)
+            self.poly_order.setRange(1, 10)  
+            self.poly_plot_button = QtGui.QPushButton('Plot', self)
+            self.curvefit_buttons.addButton(self.poly_plot_button)
+            self.poly_plot_button.clicked.connect(self.fit_manager)
+            
+            self.rolling_mean_radio = QtGui.QRadioButton('Rolling Mean', self)
+            self.rolling_median_radio = QtGui.QRadioButton('Rolling Median', self) 
+            self.moving_avg_window_text = QtGui.QLabel('Window')
+            self.moving_avg_window = QtGui.QSpinBox(self)
+            self.moving_avg_window.setRange(1,1000)
+            self.moving_avg_plot = QtGui.QPushButton('Plot', self)
+            self.moving_avg_plot.clicked.connect(self.moving_average_buttons)
+            
+            self.savgol_lbl = QtGui.QLabel('Savgol-Golay Filter: ', self)
+            self.savgol_window_lbl = QtGui.QLabel('Window Length', self)
+            self.savgol_window = QtGui.QSpinBox(self)
+            self.savgol_window.setRange(1,100)
+            self.savgol_window.setValue(5)
+            self.savgol_order_lbl = QtGui.QLabel('Poly Order', self)
+            self.savgol_order = QtGui.QSpinBox(self)
+            self.savgol_order.setRange(-4, 4)
+            self.savgol_order.setValue(2)
+            self.savgol_plot = QtGui.QPushButton('Plot', self)
+            self.savgol_plot.clicked.connect(self.savgol_filter)
+
+            self.trendline_lbl = QtGui.QLabel("Trendline Equation")
+            self.trendline_equation = QtGui.QLineEdit(self)
+            self.r_squared_lbl = QtGui.QLabel("R Squared")            
+            self.r_squared_output = QtGui.QLineEdit(self)
+
+            self.curvefit_layout.addWidget(self.curvefit_layout_text, 0,0,1,4)
+            self.curvefit_layout.addWidget(self.poly_label, 1,0)
+            self.curvefit_layout.addWidget(self.data_trend, 1,1)
+            self.curvefit_layout.addWidget(self.savgol_trend, 1,2)
+            self.curvefit_layout.addWidget(self.poly_order_text, 1,3)
+            self.curvefit_layout.addWidget(self.poly_order, 1,4)
+            self.curvefit_layout.addWidget(self.poly_plot_button,1,5)
+            self.curvefit_layout.addWidget(self.rolling_mean_radio, 2,0)
+            self.curvefit_layout.addWidget(self.rolling_median_radio, 2,1)
+            self.curvefit_layout.addWidget(self.moving_avg_window_text,2,2)
+            self.curvefit_layout.addWidget(self.moving_avg_window, 2,3)
+            self.curvefit_layout.addWidget(self.moving_avg_plot, 2,4)
+            self.curvefit_layout.addWidget(self.savgol_lbl, 3,0)
+            self.curvefit_layout.addWidget(self.savgol_window_lbl, 3,1)
+            self.curvefit_layout.addWidget(self.savgol_window, 3,2)
+            self.curvefit_layout.addWidget(self.savgol_order_lbl, 3,3)
+            self.curvefit_layout.addWidget(self.savgol_order, 3,4)
+            self.curvefit_layout.addWidget(self.savgol_plot, 3,5)
+            self.curvefit_layout.addWidget(self.trendline_lbl, 4,0)
+            self.curvefit_layout.addWidget(self.trendline_equation, 4,1)
+            self.curvefit_layout.addWidget(self.r_squared_lbl, 4,2)
+            self.curvefit_layout.addWidget(self.r_squared_output, 4,3)
 
             #Stats Properties
             self.Grid_horizontal_Layout_2.addWidget(self.stats_box, 1)
-            string = '<span style=" font-size:12pt;; font-weight:600;">Stats Settings</span>'       
+            string = '<span style=" font-size:10pt;; font-weight:600;">Stats</span>'       
             self.stats_layout_text = QtGui.QLabel(string, self)
             
             self.min_output_lbl = QtGui.QLabel("Data Min:")
@@ -315,59 +417,28 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             
             self.sd_lbl = QtGui.QLabel("Std Deviation:")
             self.sd_output = QtGui.QLineEdit(self)
-           
-            self.stats_buttons = QtGui.QButtonGroup()            
-            self.poly_label = QtGui.QLabel('Poly Fit:')            
-            #self.poly_fit = QtGui.QRadioButton('Poly Fit', self) 
-            self.data_trend = QtGui.QRadioButton('Of Data:', self)
-            self.avg_trend = QtGui.QRadioButton('Of Moving Avg:', self)         
-            self.poly_order_text = QtGui.QLabel('Order', self)
-            self.poly_order = QtGui.QSpinBox(self)
-            self.poly_order.setRange(1, 10)  
-            self.poly_plot_button = QtGui.QPushButton('Plot', self)
-            self.stats_buttons.addButton(self.poly_plot_button)
-            self.poly_plot_button.clicked.connect(self.polyfit)
-            
-            self.rolling_mean_radio = QtGui.QRadioButton('Rolling Mean', self)
-            self.rolling_median_radio = QtGui.QRadioButton('Rolling Median', self) 
-            self.moving_avg_window_text = QtGui.QLabel('Window')
-            self.moving_avg_window = QtGui.QSpinBox(self)
-            self.moving_avg_window.setRange(1,1000)
-            self.moving_avg_plot = QtGui.QPushButton('Plot', self)
-            self.moving_avg_plot.clicked.connect(self.moving_average_buttons)
 
-            self.trendline_lbl = QtGui.QLabel("Trendline Equation")
-            self.trendline_equation = QtGui.QLineEdit(self)
-            self.r_squared_lbl = QtGui.QLabel("R Squared")            
-            self.r_squared_output = QtGui.QLineEdit(self)
-            
+            self.bins_lbl = QtGui.QLabel('Histogram Bins:')
+            self.bins = QtGui.QSpinBox(self)
+            self.bins.setRange(1,1000)
+            self.bins.setValue(50)
+            self.histogram = QtGui.QPushButton('Plot', self)
+            self.histogram.clicked.connect(self.plot_histogram)           
+                       
             self.stats_layout.addWidget(self.stats_layout_text, 0,0,1,4)
             self.stats_layout.addWidget(self.min_output_lbl, 1,0)
             self.stats_layout.addWidget(self.min_output, 1,1)
-            self.stats_layout.addWidget(self.max_output_lbl, 1,2)
-            self.stats_layout.addWidget(self.max_output, 1,3)
-            self.stats_layout.addWidget(self.mean_output_lbl, 1,4)
-            self.stats_layout.addWidget(self.mean_output, 1,5)
-            self.stats_layout.addWidget(self.median_output_lbl, 1,6)
-            self.stats_layout.addWidget(self.median_output, 1,7)
-            self.stats_layout.addWidget(self.sd_lbl, 1,8)
-            self.stats_layout.addWidget(self.sd_output, 1,9)            
-            self.stats_layout.addWidget(self.poly_label, 2,0)
-            self.stats_layout.addWidget(self.data_trend, 2,1)
-            self.stats_layout.addWidget(self.avg_trend, 2,2)
-            self.stats_layout.addWidget(self.poly_order_text, 2,3)
-            self.stats_layout.addWidget(self.poly_order, 2,4)
-            self.stats_layout.addWidget(self.poly_plot_button,2,5)
-            self.stats_layout.addWidget(self.rolling_mean_radio, 3,0)
-            self.stats_layout.addWidget(self.rolling_median_radio, 3,1)
-            self.stats_layout.addWidget(self.moving_avg_window_text,3,2)
-            self.stats_layout.addWidget(self.moving_avg_window, 3,3)
-            self.stats_layout.addWidget(self.moving_avg_plot, 3,4)
-            self.stats_layout.addWidget(self.trendline_lbl, 5,0)
-            self.stats_layout.addWidget(self.trendline_equation, 5,1)
-            self.stats_layout.addWidget(self.r_squared_lbl, 5,2)
-            self.stats_layout.addWidget(self.r_squared_output, 5,3)
-
+            self.stats_layout.addWidget(self.max_output_lbl, 2,0)
+            self.stats_layout.addWidget(self.max_output, 2,1)
+            self.stats_layout.addWidget(self.mean_output_lbl, 3,0)
+            self.stats_layout.addWidget(self.mean_output, 3,1)
+            self.stats_layout.addWidget(self.median_output_lbl, 4,0)
+            self.stats_layout.addWidget(self.median_output, 4,1)
+            self.stats_layout.addWidget(self.sd_lbl, 5,0)
+            self.stats_layout.addWidget(self.sd_output, 5,1)            
+            self.stats_layout.addWidget(self.bins_lbl, 6,0)
+            self.stats_layout.addWidget(self.bins, 6,1)
+            self.stats_layout.addWidget(self.histogram, 6,2)
 
             
                     
