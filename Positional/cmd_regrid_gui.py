@@ -1,20 +1,13 @@
 import numpy as np
-import numpy.ma as ma
 import sys
-#from PyQt4 import QtCore
+from PyQt4 import QtCore
 from PyQt4 import QtGui
-#import matplotlib.pyplot as plt
-#import matplotlib.mlab as mlab
-#import matplotlib.cm as cm
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
-import itertools
-from pandas import *
-import scipy.signal
-#import seaborn as sns
 
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI_Templates.plotter import Ui_MainWindow
-from ArchaeoPY.IO.regrid_cmd import regrid_cmd
+#from ArchaeoPY.IO.regrid_cmd import regrid_cmd
+from ArchaeoPY.Positional.regrid_cmd import regrid_cmd
 
 #import ArchaeoPY modules
 #import stats
