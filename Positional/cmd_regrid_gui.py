@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.ma as ma
 import sys
 #from PyQt4 import QtCore
 from PyQt4 import QtGui
@@ -7,14 +6,11 @@ from PyQt4 import QtGui
 #import matplotlib.mlab as mlab
 #import matplotlib.cm as cm
 from matplotlib.backends.backend_qt4 import NavigationToolbar2QT as NavigationToolbar
-import itertools
-from pandas import *
-import scipy.signal
-#import seaborn as sns
+
 
 # import the MainWindow widget from the converted .ui files
 from ArchaeoPY.GUI_Templates.plotter import Ui_MainWindow
-from ArchaeoPY.IO.regrid_cmd import regrid_cmd
+from ArchaeoPY.Positional.regrid_cmd import regrid_cmd
 
 #import ArchaeoPY modules
 #import stats
@@ -27,8 +23,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.ax.clear()
             self.mpl.canvas.draw()
             #Clears Legend
-            
-            
+                       
         def copy_to_clipboard(self):
             pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
             QtGui.QApplication.clipboard().setPixmap(pixmap)
@@ -41,27 +36,29 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
                 f.seek(0)
                 self.array = np.genfromtxt(f, dtype=float, delimiter=',', skiprows=1, filling_values=np.nan)
 
-            self.chart_title.clear()
+            self.chart_title.clear() #Display file path in GUI
             self.chart_title.setText(self.fname)
+            print self.array
 
 
-        def regrid(self):
-            array = self.array
-            num_cols = self.num_cols
-            fname = self.fname
-            if self.hcp_config.isChecked:
+        def regrid(self): #Regrid CMD data
+            array = self.array #set data
+            num_cols = self.num_cols #set number of columns
+            fname = self.fname #set filename
+            if self.hcp_config.isChecked: #set Coil orientation
                 config = 'HCP'
             else:
                 config = 'VCP'
-            grid = self.grid.text() 
-            samples_int = float(self.samples_int.text())
-            samples_start = float(self.samples_start.text())
-            samples_stop = float(self.samples_stop.text())
-            no_samples = (samples_stop - samples_start + samples_int) / samples_int         
-            traverses_start = float(self.trav_start.text())
-            traverses_stop = float(self.trav_stop.text())
-            no_traverses = (traverses_start + traverses_stop) / float(self.trav_int.text())
+            grid = self.grid.text() #set grid(s) to be regridded
+            samples_int = float(self.samples_int.text()) #Sampling Interval
+            samples_start = float(self.samples_start.text()) #Sample starting position
+            samples_stop = float(self.samples_stop.text()) #Sample ending position
+            no_samples = (samples_stop - samples_start + samples_int) / samples_int #number of amples down the line     
+            traverses_start = float(self.trav_start.text()) #Starting traverse number
+            traverses_stop = float(self.trav_stop.text()) #Ending traverse number
+            no_traverses = (traverses_start + traverses_stop) / float(self.trav_int.text()) #Number of traverses
             
+            #Regrid data
             regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop, no_samples, traverses_start, traverses_stop, no_traverses)
             
                               
@@ -109,49 +106,29 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.buttons_layout.addWidget(self.grid, 4,1)
             
 
-
             #survey parameters
             self.Grid_horizontal_Layout_2.addWidget(self.survey_box, 1)
             string = '<span style=" font-size:10pt;; font-weight:600;">Survey Parameters</span>'       
             self.survey_layout_text = QtGui.QLabel(string, self)
             self.survey_buttons = QtGui.QButtonGroup()
-                        
-        
+                               
             self.samples_start_lbl = QtGui.QLabel('Samples Start Position')
             self.samples_start = QtGui.QLineEdit(self)
-            #self.samples_start.setRange(0.000, 1000.000)
-            #self.samples_start.setSingleStep(0.125)
-            #self.samples_start.setValue(0.125)
-            
+        
             self.samples_stop_lbl = QtGui.QLabel('Samples End Position')
             self.samples_stop = QtGui.QLineEdit(self)
-            #self.samples_end.setRange(0.000, 1000.000)
-            #self.samples_end.setSingleStep(0.125)
-            #self.samples_end.setValue(59.875)
 
             self.samples_int_lbl = QtGui.QLabel('Sampling Interval')
             self.samples_int = QtGui.QLineEdit(self)
-            #self.samples_int.setRange(0.000, 1000.000)
-            #self.samples_int.setSingleStep(0.125)
-            #self.samples_int.setValue(0.25)
 
             self.trav_start_lbl = QtGui.QLabel('Traverses Start Position')
             self.trav_start = QtGui.QLineEdit(self)
-            #self.trav_start.setRange(0, 1000)
-            #self.trav_start.setSingleStep(0.25)
-            #self.trav_start.setValue(0.5)
-            
+
             self.trav_stop_lbl = QtGui.QLabel('Traverses End Position')
             self.trav_stop = QtGui.QLineEdit(self)
-            #self.trav_end.setRange(0, 1000)
-            #self.trav_end.setSingleStep(0.25)
-            #self.trav_end.setValue(79.5)
 
             self.trav_int_lbl = QtGui.QLabel('Traverse Interval')
             self.trav_int = QtGui.QLineEdit(self)
-            #self.trav_int.setRange(0, 1000)
-            #self.trav_int.setSingleStep(0.5)
-            #self.trav_int.setValue(1.0)    
                         
             self.survey_layout.addWidget(self.survey_layout_text, 0,0,1,2)
             self.survey_layout.addWidget(self.samples_start_lbl, 1,0)
@@ -167,9 +144,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             self.survey_layout.addWidget(self.trav_int_lbl, 6,0)
             self.survey_layout.addWidget(self.trav_int, 6,1)
 
-          
-          
-                    
+                  
         def __init__(self, parent = None):
             # initialization of the superclass
             super(ArchaeoPYMainWindow, self).__init__(parent)

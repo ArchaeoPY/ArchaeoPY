@@ -68,8 +68,8 @@ array = np.copy(array[np.isfinite(samples),:])
 #np.savettraversest(fname+'out.csv', arrasamples, delimiter=',')
 
 
-''' Rubberbanding/interpolating readings down the line:'''
-#duplicating windows into numpy arrays for no real clarity
+''' Rubberbanding readings down the line:'''
+#duplicating windows into numpy arrays for clarity
 traverses = array[:,0]
 samples = array[:,1]
 
@@ -83,7 +83,7 @@ samples_count = range(len(samples))
 samples = np.interp(samples_count,changes,samples[changes])
 
 array[:,1] = samples #Updates y-positions to inteprolated points
-np.savetxt(fname+'_interpolated2.csv', array, delimiter=',')
+np.savetxt(fname+'_rubberbanded.csv', array, delimiter=',')
 
 
 '''Regridding'''
@@ -96,16 +96,13 @@ i=0
 #Creating a grid of positions
 geoplot_traverses = np.linspace(traverses_start,traverses_stop,no_traverses)
 geoplot_samples = np.linspace(samples_start,samples_stop,no_samples)
-#print np.shape(geoplot_traverses)
-#print np.shape(geoplot_samples)
-#array_size = np.emptt([len(geoplot_traverses), len(geoplot_samples)])
 
 # prepopulates an empty numpy array to be filled with interpolated data
 new_len = len(geoplot_samples)*len(geoplot_traverses)
 out_array = np.empty((new_len,num_cols))
-#print np.shape(out_array)
 
-'''interpolates data onto 'new' grid'''
+'''Resamples data onto 'new' grid
+First reading of the file is dropped---needs fixing'''
 #Iterates through the datasets
 for start_traverses,stop_traverses in zip(start,stop):
     if i == no_traverses:
@@ -119,29 +116,18 @@ for start_traverses,stop_traverses in zip(start,stop):
         
     j=2
     for column in out_array[:,2:].T:
-        #print j
-        #if j >= 8:
-         #   continue
-        #print np.shape(out_array[:,2:].T)
-        #print j
         if i % 2 == 0:
-            #print j
-            #print len(samples[start_traverses:stop_traverses]), len(arrasamples[j,start_traverses:stop_traverses])
-            #print "geoplot samples"
-            #print geoplot_samples
-            #print "samples[start_traverses:stop_traverses]"
-            #print samples[start_traverses:stop_traverses]
-            #print "array[start_traverses:stop_traverses,j]"
-            #print array[start_traverses:stop_traverses,j]
-            column = np.interp(geoplot_samples,samples[start_traverses:stop_traverses],array[start_traverses:stop_traverses,j])
-            #np.savetxt('columna_'+str(j)+'.csv', column, delimiter=',')
-        else:
-            column = np.interp(geoplot_samples,samples[start_traverses:stop_traverses][::-1],array[start_traverses:stop_traverses,j][::-1])[::-1]
-        out_array[no_samples*i:no_samples*(i+1),j] = column
-        j+=1              
-    i+=1
-np.savetxt(fname+'rubberbanded.csv',out_array,delimiter=',')
+            column = np.interp(geoplot_samples,samples[start_traverses:stop_traverses],
+                               array[start_traverses:stop_traverses,j])
 
+        else:
+            column = np.interp(geoplot_samples,samples[start_traverses:stop_traverses][::-1], 
+                               array[start_traverses:stop_traverses,j][::-1])[::-1]
+        out_array[no_samples*i:no_samples*(i+1),j] = column
+        j+=1  
+        #print start_traverses            
+    i+=1
+np.savetxt(fname+'_resampled.csv',out_array,delimiter=',')
 
 
 '''Saves Data Out'''
@@ -169,7 +155,8 @@ for column, level in zip(out_array[:,2:].T,('C1','I1','C2','I2','C3','I3')):
     #atraverses = fig.add_atraverseses([0.05,0.05,0.9,0.9])
     pos_plt = np.nanmedian(z)+np.nanstd(z)
     #atraverses.atraversesis('equal')
-    im = plt.imshow(newz, vmin=neg_plt, vmax=pos_plt, interpolation='nearest', origin="upper", cmap=plt.cm.Greys, extent=(samples_start,samples_stop,traverses_start,traverses_stop))
+    im = plt.imshow(newz, vmin=neg_plt, vmax=pos_plt, interpolation='nearest',
+                    origin="upper", cmap=plt.cm.Greys, extent=(samples_start,samples_stop,traverses_start,traverses_stop))
     plt.colorbar()
      
     #plt.scatter(out_traverses,out_samples)
