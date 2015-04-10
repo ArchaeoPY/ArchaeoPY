@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 fname = 'DD20m-crop.PNG'
 
 #Dimensions of Data in Readings
-dimensions = (80,80)
+dimensions = (40,80)
 #Threshold for converting grey to black/white (0-255)
 bwthreshold = 100
 
