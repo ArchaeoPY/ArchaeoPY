@@ -26,9 +26,12 @@ np.set_printoptions(threshold=np.nan)
 
 def regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop, no_samples, traverses_start, traverses_stop, no_traverses):   
     #File Properties
+    print no_samples
+    print no_traverses
     HILO = config #Coil Orientation
     traverses = array[:,0] #Column of traverse positions
     samples = array[:,1] #Column of samples positions
+    num_cols = 8
     
     #'''Fixing the blank row at the end of a line:'''
     #Identify line changes
@@ -37,10 +40,14 @@ def regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop
     #last_row = len(samples)
     #stop = np.append(stop, last_row)
     start = np.concatenate(([0],np.add(stop,1))) #Beginning of Line
+
     
     #shifts 'end' sample back one place
     samples[stop-1] = samples[stop]
     samples[stop] = np.nan
+    last_row = len(samples)-1
+    samples[last_row-1] = 0
+    samples[last_row] = np.nan  
     array[:,1] = samples
     #creates new array without 'blank' rows (at the end of lines)
     array = np.copy(array[np.isfinite(samples),:])
@@ -74,9 +81,9 @@ def regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop
     
     #Creating a grid of positions
     geoplot_traverses = np.linspace(traverses_start,traverses_stop,no_traverses)
-    print no_traverses
+    #print no_traverses
     geoplot_samples = np.linspace(samples_start,samples_stop,no_samples)
-    print no_samples
+    #print no_samples
 
     
     # prepopulates an empty numpy array to be filled with interpolated data
@@ -128,10 +135,10 @@ def regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop
                 #print np.shape(z)
                 z[no_samples*i:no_samples*(i+1)] = z[no_samples*i:no_samples*(i+1)][::-1]
         #print HILO + level + '_' + str(grid) +'.DAT'
-        np.savetxt(HILO + level + '_' + str(grid) +'.DAT',z)  
+        np.savetxt(str(HILO) + str(level) + '_' + str(grid) +'.DAT',z)  
         newz = z.reshape((len(geoplot_traverses),len(geoplot_samples)))
         #print np.shape(newz)    
-        np.savetxt(fname+'regridded'+HILO + level + '_' + str(grid) +'.csv',newz,delimiter=',')
+        np.savetxt(fname+'regridded'+str(HILO) + str(level) + '_' + str(grid) +'.csv',newz,delimiter=',')
         neg_plt = np.nanmedian(z)-np.nanstd(z)
         #print np.nanstd(z)
         #print np.nanmedian(z)

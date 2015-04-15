@@ -38,7 +38,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
 
             self.chart_title.clear() #Display file path in GUI
             self.chart_title.setText(self.fname)
-            print self.array
+            #print self.array
 
 
         def regrid(self): #Regrid CMD data
@@ -56,7 +56,7 @@ class ArchaeoPYMainWindow(QtGui.QMainWindow, Ui_MainWindow):
             no_samples = (samples_stop - samples_start + samples_int) / samples_int #number of amples down the line     
             traverses_start = float(self.trav_start.text()) #Starting traverse number
             traverses_stop = float(self.trav_stop.text()) #Ending traverse number
-            no_traverses = (traverses_start + traverses_stop) / float(self.trav_int.text()) #Number of traverses
+            no_traverses = (traverses_stop - traverses_start + float(self.trav_int.text())) / float(self.trav_int.text()) #Number of traverses
             
             #Regrid data
             regrid_cmd(fname, config, grid, array, num_cols, samples_start, samples_stop, no_samples, traverses_start, traverses_stop, no_traverses)
